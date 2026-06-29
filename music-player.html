@@ -6,289 +6,248 @@
 <title>Listening Room</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink:      #0d0b09;
-    --paper:    #f4efe8;
-    --warm-bg:  #171412;
-    --surface:  #1f1b17;
-    --border:   #2a2520;
-    --muted:    #78716c;
-    --quiet:    #57534e;
-    --accent:   #d4a574;
-    --accent-dim: #a88b6a;
-    --font-heading: 'DM Serif Display', Georgia, serif;
-    --font-ui:      'DM Sans', system-ui, sans-serif;
-    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --bg:      #eef1f3;
+    --bg-card: #f6f8f9;
+    --ink:     #26323c;
+    --ink-dim: #6b7c8a;
+    --ink-quiet:#9aa8b4;
+    --border:  #dce3e8;
+    --border-hover:#bec8d0;
+    --accent:  #4e8797;
+    --accent-soft: #7aacba;
+    --shadow:  0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03);
+    --shadow-hover: 0 2px 6px rgba(0,0,0,0.06), 0 8px 28px rgba(0,0,0,0.05);
+    --font-display: 'Noto Serif SC', 'Source Han Serif SC', 'SimSun', serif;
+    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     font-family: var(--font-ui);
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--bg);
+    color: var(--ink);
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Subtle warm vignette */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background: radial-gradient(ellipse at 50% 40%, rgba(212,165,116,0.03) 0%, transparent 55%);
-    pointer-events: none; z-index: 0;
-  }
-
-  /* ── Player ── */
+  /* ── Frame ── */
   .player {
-    position: relative; z-index: 1;
-    width: 100%; max-width: 400px;
-    padding: 48px 36px 36px;
+    width: 100%; max-width: 380px;
+    padding: 40px 32px 32px;
+    background: var(--bg-card);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
     display: flex; flex-direction: column; align-items: center;
-    gap: 32px;
-    animation: enter 0.6s var(--ease-out) both;
+    gap: 28px;
+    animation: enter 0.5s var(--ease) both;
   }
   @keyframes enter { from { opacity: 0; transform: translateY(8px); } }
 
   /* ── Cover ── */
-  .cover-frame {
-    position: relative;
-    width: 260px; height: 260px;
+  .cover-wrap {
+    width: 240px; height: 240px;
     flex-shrink: 0;
-  }
-  .cover-silhouette {
-    position: absolute;
-    inset: -16px;
-    border-radius: 50%;
-    background: var(--surface);
-    opacity: 0;
-    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
-    transform: scale(0.94);
-  }
-  .cover-silhouette.visible { opacity: 1; transform: scale(1); }
-  .cover-silhouette.rotating { animation: rotateDisc 12s linear infinite; }
-  @keyframes rotateDisc { to { transform: rotate(360deg); } }
-
-  /* Tiny spindle dot */
-  .spindle {
-    position: absolute; z-index: 10;
-    top: 50%; left: 50%;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--ink);
-    border: 1.5px solid var(--border);
-    transform: translate(-50%, -50%);
-    opacity: 0;
-    transition: opacity 0.4s;
-  }
-  .spindle.visible { opacity: 1; }
-
-  .cover-area {
-    position: relative; z-index: 5;
-    width: 100%; height: 100%;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
+    border-radius: 10px;
+    background: #dce3ea;
+    box-shadow: var(--shadow);
     overflow: hidden;
-    background: var(--surface);
-    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
-    transition: box-shadow 0.4s var(--ease-out), transform 0.3s var(--ease-out);
+    cursor: pointer;
+    position: relative;
+    transition: box-shadow 0.3s var(--ease);
+    display: flex; align-items: center; justify-content: center;
   }
-  .cover-area:hover { transform: scale(1.015); }
-  .cover-area.playing { box-shadow: 0 4px 32px rgba(212,165,116,0.12); }
+  .cover-wrap:hover { box-shadow: var(--shadow-hover); }
 
-  .cover-area img {
+  .cover-wrap img {
     width: 100%; height: 100%; object-fit: cover; display: block;
-    animation: revealImg 0.5s var(--ease-out);
+    animation: revealImg 0.4s var(--ease);
   }
-  @keyframes revealImg { from { opacity: 0; transform: scale(1.03); } }
+  @keyframes revealImg { from { opacity: 0; } }
 
-  .cover-placeholder {
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-    pointer-events: none; color: var(--quiet);
+  .cover-empty {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    pointer-events: none; color: var(--ink-quiet);
     transition: opacity 0.3s;
   }
-  .cover-placeholder .icon { font-size: 40px; opacity: 0.45; }
-  .cover-placeholder .hint {
-    font-family: var(--font-ui); font-size: 10.5px;
-    letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.5;
+  .cover-empty .note { font-size: 36px; opacity: 0.35; }
+  .cover-empty .hint {
+    font-family: var(--font-ui); font-size: 10px; font-weight: 400;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-quiet); opacity: 0.6;
   }
 
   /* ── Meta ── */
   .meta { text-align: center; width: 100%; }
-  .title {
-    font-family: var(--font-heading);
-    font-size: 28px; font-weight: 400;
-    letter-spacing: -0.01em;
-    line-height: 1.25;
-    color: var(--paper);
-    animation: fadeUp 0.5s 0.05s var(--ease-out) both;
+  .meta .title {
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 600; letter-spacing: 0.02em;
+    line-height: 1.4; color: var(--ink);
   }
-  .subtitle {
+  .meta .artist {
     font-family: var(--font-ui); font-size: 12px; font-weight: 400;
-    color: var(--muted); margin-top: 6px;
-    letter-spacing: 0.03em;
-    animation: fadeUp 0.5s 0.1s var(--ease-out) both;
+    color: var(--ink-dim); margin-top: 4px; letter-spacing: 0.04em;
   }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } }
 
   /* ── Timeline ── */
   .timeline {
-    width: 100%; display: flex; align-items: center; gap: 10px;
-    animation: fadeUp 0.5s 0.15s var(--ease-out) both;
+    width: 100%; display: flex; align-items: center; gap: 8px;
   }
-  .t { font-family: var(--font-ui); font-size: 10.5px; font-weight: 400;
-       font-variant-numeric: tabular-nums; color: var(--quiet);
-       min-width: 38px; letter-spacing: 0.04em; }
-  .t.current { text-align: right; }
+  .tm {
+    font-family: var(--font-ui); font-size: 10px; font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-quiet); min-width: 34px; letter-spacing: 0.04em;
+  }
+  .tm.now { text-align: right; }
   .progress-bar {
     flex: 1; -webkit-appearance: none; appearance: none;
-    height: 2px; background: var(--border); border-radius: 1px;
-    cursor: pointer; outline: none;
+    height: 3px; background: var(--border);
+    border-radius: 2px; cursor: pointer; outline: none;
   }
   .progress-bar::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 10px; height: 10px;
-    background: var(--paper); border-radius: 50%;
+    background: var(--ink); border-radius: 50%;
     cursor: pointer; opacity: 0;
     transition: opacity 0.2s, transform 0.15s;
   }
   .progress-bar:hover::-webkit-slider-thumb,
   .progress-bar:active::-webkit-slider-thumb { opacity: 1; }
-  .progress-bar::-webkit-slider-thumb:hover { transform: scale(1.4); }
+  .progress-bar::-webkit-slider-thumb:hover { transform: scale(1.3); }
   .progress-bar::-moz-range-thumb {
-    width: 10px; height: 10px; background: var(--paper);
+    width: 10px; height: 10px; background: var(--ink);
     border: none; border-radius: 50%; cursor: pointer;
   }
 
   /* ── Controls ── */
   .controls {
-    display: flex; align-items: center; gap: 32px;
-    animation: fadeUp 0.5s 0.2s var(--ease-out) both;
+    display: flex; align-items: center; gap: 24px;
   }
   .btn-play {
-    width: 56px; height: 56px;
+    width: 52px; height: 52px;
     border-radius: 50%;
-    background: transparent;
-    border: 1.5px solid var(--border);
-    color: var(--paper);
-    font-size: 18px; cursor: pointer;
+    background: var(--ink);
+    color: var(--bg-card);
+    border: none;
+    font-size: 17px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.25s var(--ease-out);
+    transition: all 0.2s var(--ease);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
-  .btn-play:hover { border-color: var(--accent-dim); color: var(--accent); }
-  .btn-play:active { transform: scale(0.93); }
-  .btn-play:disabled { opacity: 0.2; cursor: not-allowed; }
-  .btn-play:disabled:hover { border-color: var(--border); color: var(--paper); }
+  .btn-play:hover { transform: scale(1.04); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+  .btn-play:active { transform: scale(0.94); }
+  .btn-play:disabled { opacity: 0.2; cursor: not-allowed; transform: none; box-shadow: none; }
 
   /* ── Bottom bar ── */
-  .bottom-bar {
-    width: 100%; display: flex; align-items: center; justify-content: center; gap: 20px;
-    animation: fadeUp 0.5s 0.25s var(--ease-out) both;
+  .bottom-row {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 16px;
   }
-  .volume-group { display: flex; align-items: center; gap: 8px; }
-  .volume-group .icon {
-    font-size: 14px; color: var(--muted); cursor: default; user-select: none;
+  .vol-group { display: flex; align-items: center; gap: 6px; }
+  .vol-label {
+    font-family: var(--font-ui); font-size: 10px; font-weight: 400;
+    color: var(--ink-quiet); letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: default; user-select: none;
   }
-  .volume-slider {
+  .vol-slider {
     -webkit-appearance: none; appearance: none;
-    width: 80px; height: 2px;
+    width: 72px; height: 2px;
     background: var(--border); border-radius: 1px; cursor: pointer;
   }
-  .volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 8px; height: 8px;
-    background: var(--muted); border-radius: 50%; cursor: pointer;
+  .vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 7px; height: 7px; background: var(--ink-dim);
+    border-radius: 50%; cursor: pointer;
     transition: background 0.2s, transform 0.15s;
   }
-  .volume-slider::-webkit-slider-thumb:hover { background: var(--paper); transform: scale(1.3); }
-  .volume-slider::-moz-range-thumb {
-    width: 8px; height: 8px; background: var(--muted);
+  .vol-slider::-webkit-slider-thumb:hover { background: var(--ink); transform: scale(1.3); }
+  .vol-slider::-moz-range-thumb {
+    width: 7px; height: 7px; background: var(--ink-dim);
     border: none; border-radius: 50%; cursor: pointer;
   }
 
-  .sep { width: 1px; height: 14px; background: var(--border); border-radius: 1px; }
+  .sep { width: 1px; height: 12px; background: var(--border); }
 
   .loop-btn {
     background: none; border: none;
-    color: var(--quiet); font-family: var(--font-ui);
-    font-size: 11px; cursor: pointer; letter-spacing: 0.05em;
-    padding: 4px 0; transition: color 0.25s;
+    font-family: var(--font-ui); font-size: 10px; font-weight: 400;
+    color: var(--ink-quiet); cursor: pointer;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    transition: color 0.2s;
   }
-  .loop-btn:hover { color: var(--muted); }
+  .loop-btn:hover { color: var(--ink-dim); }
   .loop-btn.active { color: var(--accent); }
 
   /* ── Lyrics ── */
-  .lyrics-toggle {
-    background: none; border: none;
-    color: var(--quiet); font-family: var(--font-ui);
-    font-size: 11px; cursor: pointer; letter-spacing: 0.05em;
-    padding: 2px 0; transition: color 0.25s;
+  .lyr-toggle {
+    background: none; border: 1px solid var(--border);
+    font-family: var(--font-ui); font-size: 10px; font-weight: 400;
+    color: var(--ink-quiet); cursor: pointer;
+    padding: 4px 14px; border-radius: 20px;
+    letter-spacing: 0.06em;
+    transition: all 0.2s;
   }
-  .lyrics-toggle:hover { color: var(--muted); }
-  .lyrics-toggle.active { color: var(--accent-dim); }
+  .lyr-toggle:hover { border-color: var(--border-hover); color: var(--ink-dim); }
+  .lyr-toggle.active { border-color: var(--accent-soft); color: var(--accent); }
 
-  .lyrics-panel {
+  .lyr-panel {
     width: 100%; max-height: 0; overflow: hidden;
-    transition: max-height 0.5s var(--ease-in-out);
+    transition: max-height 0.45s var(--ease);
   }
-  .lyrics-panel.open { max-height: 220px; }
-  .lyrics-inner {
-    padding: 0 8px; max-height: 220px; overflow-y: auto;
+  .lyr-panel.open { max-height: 200px; border-top: 1px solid var(--border); }
+  .lyr-inner {
+    padding: 16px 4px 0; max-height: 200px; overflow-y: auto;
     scroll-behavior: smooth;
-    font-family: var(--font-ui); font-size: 13px;
-    line-height: 2.3; text-align: center; color: var(--quiet);
-    -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
-    mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+    font-family: var(--font-ui); font-size: 12px;
+    line-height: 2.3; text-align: center; color: var(--ink-quiet);
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
   }
-  .lyrics-inner .line { transition: all 0.4s var(--ease-out); }
-  .lyrics-inner .line.active {
-    color: var(--accent-dim); font-weight: 500;
+  .lyr-inner .line { transition: all 0.35s var(--ease); }
+  .lyr-inner .line.active {
+    color: var(--accent); font-weight: 500;
   }
+  .lyr-inner .line.empty { color: var(--ink-quiet); font-style: italic; }
 
   /* ── Drop zone ── */
   .drop-zone {
-    width: 100%; padding: 24px 16px;
+    width: 100%; padding: 20px 16px;
     border: 1px dashed var(--border);
-    border-radius: 4px;
+    border-radius: 8px;
     text-align: center; cursor: pointer;
-    font-family: var(--font-ui); font-size: 12px;
-    color: var(--quiet); letter-spacing: 0.03em;
-    transition: all 0.3s var(--ease-out);
-    animation: fadeUp 0.5s 0.3s var(--ease-out) both;
+    font-family: var(--font-ui); font-size: 11px; font-weight: 400;
+    color: var(--ink-quiet); letter-spacing: 0.04em;
+    transition: all 0.25s;
   }
   .drop-zone:hover, .drop-zone.drag-over {
-    border-color: var(--accent-dim); color: var(--muted);
+    border-color: var(--border-hover); color: var(--ink-dim);
+    background: rgba(0,0,0,0.01);
   }
   .drop-zone.hidden { display: none; }
   .drop-zone small { opacity: 0.5; }
 
   /* ── Toast ── */
   .toast {
-    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
-    background: var(--surface); color: var(--paper);
-    padding: 10px 24px; border-radius: 6px;
-    border: 1px solid var(--border);
-    font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.02em;
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--bg-card);
+    padding: 10px 22px; border-radius: 8px;
+    font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.03em;
     opacity: 0; pointer-events: none;
-    transition: opacity 0.3s var(--ease-out);
+    transition: opacity 0.25s var(--ease);
     z-index: 100;
   }
   .toast.show { opacity: 1; }
 
   .file-input-hidden { display: none; }
 
-  @media (max-width: 440px) {
-    .player { padding: 32px 20px 24px; gap: 24px; }
-    .cover-frame { width: 220px; height: 220px; }
-    .title { font-size: 24px; }
-    .btn-play { width: 50px; height: 50px; font-size: 16px; }
+  @media (max-width: 420px) {
+    .player { max-width: 100%; margin: 8px; padding: 28px 18px 22px; gap: 22px; }
+    .cover-wrap { width: 200px; height: 200px; }
+    .meta .title { font-size: 19px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -301,38 +260,32 @@
 <div class="player">
 
   <!-- Cover -->
-  <div class="cover-frame">
-    <div class="cover-silhouette" id="vinylDisc"></div>
-    <div class="spindle" id="spindle"></div>
-    <div class="cover-area" id="coverArea" title="点击或拖放图片添加封面">
-      <div class="cover-placeholder" id="coverPlaceholder">
-        <span class="icon">♫</span>
-        <span class="hint">add cover</span>
-      </div>
-      <img id="coverImg" src="" alt="" style="display:none">
+  <div class="cover-wrap" id="coverArea" title="点击或拖放图片添加封面">
+    <div class="cover-empty" id="coverEmpty">
+      <span class="note">♫</span>
+      <span class="hint">Add Cover</span>
     </div>
+    <img id="coverImg" src="" alt="" style="display:none">
     <input type="file" class="file-input-hidden" id="coverFileInput" accept="image/*">
   </div>
 
   <!-- Meta -->
   <div class="meta">
-    <div class="title" id="setName">drop audio files</div>
-    <div class="subtitle" id="trackName">no tracks loaded</div>
+    <div class="title" id="setName">拖放音频文件</div>
+    <div class="artist" id="trackName">尚无曲目</div>
   </div>
 
-  <!-- Lyrics -->
-  <div style="width:100%;display:flex;justify-content:center;">
-    <button class="lyrics-toggle" id="lyricsBtn" style="display:none">lyrics</button>
-  </div>
-  <div class="lyrics-panel" id="lyricsPanel">
-    <div class="lyrics-inner" id="lyricsInner"></div>
+  <!-- Lyrics toggle + panel -->
+  <button class="lyr-toggle" id="lyricsBtn" style="display:none">歌词</button>
+  <div class="lyr-panel" id="lyricsPanel">
+    <div class="lyr-inner" id="lyricsInner"></div>
   </div>
 
   <!-- Timeline -->
   <div class="timeline">
-    <span class="t current" id="timeCurrent">0:00</span>
+    <span class="tm now" id="timeCurrent">0:00</span>
     <input type="range" class="progress-bar" id="progressBar" min="0" max="100" value="0" disabled>
-    <span class="t total" id="timeTotal">0:00</span>
+    <span class="tm" id="timeTotal">0:00</span>
   </div>
 
   <!-- Play -->
@@ -340,19 +293,19 @@
     <button class="btn-play" id="btnPlay" disabled>▶</button>
   </div>
 
-  <!-- Bottom bar -->
-  <div class="bottom-bar">
-    <div class="volume-group">
-      <span class="icon">vol</span>
-      <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
+  <!-- Volume + Loop -->
+  <div class="bottom-row">
+    <div class="vol-group">
+      <span class="vol-label">vol</span>
+      <input type="range" class="vol-slider" id="volumeSlider" min="0" max="100" value="80">
     </div>
     <span class="sep"></span>
     <button class="loop-btn" id="btnLoop">loop off</button>
   </div>
 
   <!-- Drop zone -->
-  <div class="drop-zone" id="dropZone" title="拖放或点击导入音频">
-    drop audio files here<br><small>or click to browse  ·  mp3 wav ogg flac</small>
+  <div class="drop-zone" id="dropZone">
+    拖放音频文件<br><small>或点击浏览  ·  mp3 wav ogg flac</small>
   </div>
   <input type="file" class="file-input-hidden" id="audioFileInput" accept="audio/*,.lrc" multiple>
 </div>
@@ -363,7 +316,7 @@
 <script>
 /* ── Env ── */
 if (typeof FileReader === 'undefined') {
-  document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0d0b09;color:#f4efe8;font-family:system-ui,sans-serif;"><div style="text-align:center;padding:32px;"><p style="font-size:24px;">Your browser is not supported.</p><p style="color:#78716c;margin-top:8px;">Please use a recent version of Chrome, Firefox, Edge, or Safari.</p></div></div>`;
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,sans-serif;background:#eef1f3;color:#26323c;"><p>浏览器版本过低，请使用最新版 Chrome / Firefox / Edge / Safari</p></div>';
   throw new Error('No FileReader');
 }
 
@@ -371,8 +324,9 @@ if (typeof FileReader === 'undefined') {
 const Store = (() => {
   let ok = false; const P = 'msp:';
   try { const k = P+'t'; localStorage.setItem(k,'1'); localStorage.removeItem(k); ok = true; } catch(_){}
+  const D = {volume:0.8,loop:false};
   return {
-    get(k) { if(!ok) return ({volume:0.8,loop:false})[k]; try { const r=localStorage.getItem(P+k); return r!=null ? JSON.parse(r) : ({volume:0.8,loop:false})[k]; } catch(_){ return ({volume:0.8,loop:false})[k]; } },
+    get(k) { if(!ok) return D[k]; try { const r=localStorage.getItem(P+k); return r!=null ? JSON.parse(r) : D[k]; } catch(_){ return D[k]; } },
     set(k,v) { if(!ok) return; try { localStorage.setItem(P+k, JSON.stringify(v)); } catch(_){} }
   };
 })();
@@ -405,8 +359,7 @@ const AudioEngine = (() => {
 
 /* ── Playlist ── */
 const Playlist = (() => {
-  let files=[]; let idx=-1;
-  const lrcMap=new Map();
+  let files=[]; let idx=-1; const lrcMap=new Map();
   function add(nf) {
     const arr=Array.from(nf);
     if(!arr.length) return {added:0,skipped:0,total:files.length};
@@ -435,10 +388,10 @@ const CoverManager = (() => {
   function on(n,fn){ if(!ls[n]) ls[n]=[]; ls[n].push(fn); }
   function em(n,d){ (ls[n]||[]).forEach(fn=>fn(d)); }
   function set(f) {
-    if(!f||!f.type.startsWith('image/')) { em('err',{m:'not a valid image file'}); return; }
+    if(!f||!f.type.startsWith('image/')) { em('err',{m:'不是有效的图片文件'}); return; }
     const r=new FileReader();
     r.onload=()=>{ dataURL=r.result; em('ch',{url:dataURL}); };
-    r.onerror=()=>em('err',{m:'failed to read image'});
+    r.onerror=()=>em('err',{m:'图片读取失败'});
     r.readAsDataURL(f);
   }
   return {set,cur:()=>dataURL,on};
@@ -490,11 +443,9 @@ const Lyrics = (() => {
 /* ── UI ── */
 (function() {
   const coverArea = document.getElementById('coverArea');
-  const coverPlaceholder = document.getElementById('coverPlaceholder');
+  const coverEmpty = document.getElementById('coverEmpty');
   const coverImg = document.getElementById('coverImg');
   const coverFileInput = document.getElementById('coverFileInput');
-  const vinylDisc = document.getElementById('vinylDisc');
-  const spindle = document.getElementById('spindle');
   const setName = document.getElementById('setName');
   const trackName = document.getElementById('trackName');
   const lyricsBtn = document.getElementById('lyricsBtn');
@@ -521,24 +472,16 @@ const Lyrics = (() => {
     clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.classList.remove('show'),2500);
   }
 
-  function updateTrackDisplay() {
+  function updateMeta() {
     const f=Playlist.cur();
-    trackName.textContent = f ? `${Playlist.gi()+1} / ${Playlist.cnt()}  ·  ${f.name}` : 'no tracks loaded';
-    setName.textContent = Playlist.cnt()>0 ? `${Playlist.cnt()} tracks` : 'drop audio files';
+    trackName.textContent = f ? `${Playlist.gi()+1} / ${Playlist.cnt()}  ·  ${f.name}` : '尚无曲目';
+    setName.textContent = Playlist.cnt()>0 ? `${Playlist.cnt()} tracks` : '拖放音频文件';
   }
   function updatePlayBtn() {
     if(Playlist.cnt()===0) { btnPlay.disabled=true; btnPlay.textContent='▶'; return; }
     btnPlay.disabled=false;
     btnPlay.textContent = AudioEngine.paused() ? '▶' : '⏸';
   }
-
-  function setVinyl(on, hasCover) {
-    if(hasCover) vinylDisc.classList.add('visible'), spindle.classList.add('visible');
-    if(on&&hasCover) vinylDisc.classList.add('rotating');
-    else vinylDisc.classList.remove('rotating');
-  }
-  AudioEngine.on('play', ()=>{ setVinyl(true,!!CoverManager.cur()); coverArea.classList.add('playing'); btnPlay.textContent='⏸'; });
-  AudioEngine.on('pause', ()=>{ setVinyl(false,!!CoverManager.cur()); coverArea.classList.remove('playing'); btnPlay.textContent='▶'; });
 
   /* restore */
   const sv=Store.get('volume'), sl=Store.get('loop');
@@ -549,25 +492,25 @@ const Lyrics = (() => {
 
   /* cover */
   coverArea.addEventListener('click',()=>coverFileInput.click());
-  ['dragover','dragenter'].forEach(ev=>coverArea.addEventListener(ev,e=>{ e.preventDefault(); e.stopPropagation(); }));
+  coverArea.addEventListener('dragover',e=>{ e.preventDefault(); });
   coverArea.addEventListener('drop',e=>{ e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) CoverManager.set(f); });
   coverFileInput.addEventListener('change',()=>{ const f=coverFileInput.files[0]; if(f) CoverManager.set(f); coverFileInput.value=''; });
-  CoverManager.on('ch',({url})=>{ coverImg.src=url; coverImg.style.display='block'; coverPlaceholder.style.display='none'; vinylDisc.classList.add('visible'); spindle.classList.add('visible'); if(!AudioEngine.paused()) vinylDisc.classList.add('rotating'); });
+  CoverManager.on('ch',({url})=>{ coverImg.src=url; coverImg.style.display='block'; coverEmpty.style.display='none'; });
   CoverManager.on('err',({m})=>toast_(m));
 
   /* import */
   function importFiles(fl) {
     if(!fl||!fl.length) return;
     const r=Playlist.add(fl);
-    if(r.added===0) { toast_('no supported audio formats found'); return; }
-    if(r.skipped>0) toast_(`added ${r.added}, skipped ${r.skipped} non-audio files`);
+    if(r.added===0) { toast_('未识别到支持的音频格式'); return; }
+    if(r.skipped>0) toast_(`已添加 ${r.added} 首，跳过 ${r.skipped} 个文件`);
     if(r.added>0&&r.total===r.added) loadTrack();
-    updateTrackDisplay(); updatePlayBtn();
+    updateMeta(); updatePlayBtn();
     dropZone.classList.toggle('hidden',Playlist.cnt()>0);
   }
   async function loadTrack() {
     const f=Playlist.cur(); if(!f) return;
-    AudioEngine.load(f); updateTrackDisplay(); updatePlayBtn();
+    AudioEngine.load(f); updateMeta(); updatePlayBtn();
     Lyrics.clear(); lyricsBtn.style.display='none'; lyricsPanel.classList.remove('open'); lyricsVisible=false;
     const lrc=Playlist.lrcFor(f);
     if(lrc) { Lyrics.parse(lrc); showLyrics(); }
@@ -610,7 +553,7 @@ const Lyrics = (() => {
   let consErr=0;
   AudioEngine.on('end',()=>{ consErr=0; Playlist.nxt(); loadTrack(); AudioEngine.play(); });
   AudioEngine.on('meta',()=>{ consErr=0; });
-  AudioEngine.on('err',({f})=>{ consErr++; if(consErr>=Playlist.cnt()) { toast_('all tracks failed to play'); consErr=0; return; } toast_(`playback error: ${f?f.name:'unknown'}`); Playlist.nxt(); loadTrack(); AudioEngine.play(); });
+  AudioEngine.on('err',({f})=>{ consErr++; if(consErr>=Playlist.cnt()) { toast_('所有曲目均无法播放'); consErr=0; return; } toast_(`播放出错: ${f?f.name:'未知'}`); Playlist.nxt(); loadTrack(); AudioEngine.play(); });
 
   /* volume */
   volumeSlider.addEventListener('input',()=>{ const v=volumeSlider.value/100; AudioEngine.vol(v); Store.set('volume',v); });
