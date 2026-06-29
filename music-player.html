@@ -18,6 +18,7 @@
     --border-hover:#bec8d0;
     --accent:  #4e8797;
     --accent-soft: #7aacba;
+    --viz-bar:  #c8d6dc;
     --shadow:  0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03);
     --shadow-hover: 0 2px 6px rgba(0,0,0,0.06), 0 8px 28px rgba(0,0,0,0.05);
     --font-display: 'Noto Serif SC', 'Source Han Serif SC', 'SimSun', serif;
@@ -36,22 +37,21 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ── Frame ── */
   .player {
-    width: 100%; max-width: 380px;
-    padding: 40px 32px 32px;
+    width: 100%; max-width: 400px;
+    padding: 36px 28px 28px;
     background: var(--bg-card);
     border-radius: 18px;
     box-shadow: var(--shadow);
     display: flex; flex-direction: column; align-items: center;
-    gap: 28px;
+    gap: 20px;
     animation: enter 0.5s var(--ease) both;
   }
   @keyframes enter { from { opacity: 0; transform: translateY(8px); } }
 
-  /* ── Cover ── */
-  .cover-wrap {
-    width: 240px; height: 240px;
+  /* ── Cover / Video area ── */
+  .media-area {
+    width: 260px; height: 260px;
     flex-shrink: 0;
     border-radius: 10px;
     background: #dce3ea;
@@ -62,25 +62,34 @@
     transition: box-shadow 0.3s var(--ease);
     display: flex; align-items: center; justify-content: center;
   }
-  .cover-wrap:hover { box-shadow: var(--shadow-hover); }
+  .media-area:hover { box-shadow: var(--shadow-hover); }
+  .media-area.playing { box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 8px 28px rgba(78,135,151,0.08); }
 
-  .cover-wrap img {
+  .media-area img, .media-area video {
     width: 100%; height: 100%; object-fit: cover; display: block;
-    animation: revealImg 0.4s var(--ease);
   }
-  @keyframes revealImg { from { opacity: 0; } }
+  .media-area video { cursor: default; }
 
-  .cover-empty {
+  .media-empty {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
     pointer-events: none; color: var(--ink-quiet);
-    transition: opacity 0.3s;
   }
-  .cover-empty .note { font-size: 36px; opacity: 0.35; }
-  .cover-empty .hint {
+  .media-empty .note { font-size: 36px; opacity: 0.35; }
+  .media-empty .hint {
     font-family: var(--font-ui); font-size: 10px; font-weight: 400;
     letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--ink-quiet); opacity: 0.6;
   }
+
+  /* ── Visualizer canvas ── */
+  .viz-canvas {
+    width: 100%; height: 48px;
+    display: block;
+    border-radius: 6px;
+    opacity: 0.55;
+    transition: opacity 0.4s var(--ease);
+  }
+  .viz-canvas.active { opacity: 1; }
 
   /* ── Meta ── */
   .meta { text-align: center; width: 100%; }
@@ -208,10 +217,7 @@
     mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
   }
   .lyr-inner .line { transition: all 0.35s var(--ease); }
-  .lyr-inner .line.active {
-    color: var(--accent); font-weight: 500;
-  }
-  .lyr-inner .line.empty { color: var(--ink-quiet); font-style: italic; }
+  .lyr-inner .line.active { color: var(--accent); font-weight: 500; }
 
   /* ── Drop zone ── */
   .drop-zone {
@@ -245,8 +251,8 @@
   .file-input-hidden { display: none; }
 
   @media (max-width: 420px) {
-    .player { max-width: 100%; margin: 8px; padding: 28px 18px 22px; gap: 22px; }
-    .cover-wrap { width: 200px; height: 200px; }
+    .player { max-width: 100%; margin: 8px; padding: 24px 14px 20px; gap: 16px; }
+    .media-area { width: 220px; height: 220px; }
     .meta .title { font-size: 19px; }
   }
 
@@ -259,23 +265,27 @@
 
 <div class="player">
 
-  <!-- Cover -->
-  <div class="cover-wrap" id="coverArea" title="点击或拖放图片添加封面">
-    <div class="cover-empty" id="coverEmpty">
+  <!-- Media: cover image or video -->
+  <div class="media-area" id="mediaArea" title="点击添加封面 · 支持视频文件">
+    <div class="media-empty" id="mediaEmpty">
       <span class="note">♫</span>
-      <span class="hint">Add Cover</span>
+      <span class="hint">Add Cover / Video</span>
     </div>
     <img id="coverImg" src="" alt="" style="display:none">
+    <video id="videoEl" src="" style="display:none" playsinline></video>
     <input type="file" class="file-input-hidden" id="coverFileInput" accept="image/*">
   </div>
 
+  <!-- Visualizer -->
+  <canvas class="viz-canvas" id="vizCanvas"></canvas>
+
   <!-- Meta -->
   <div class="meta">
-    <div class="title" id="setName">拖放音频文件</div>
-    <div class="artist" id="trackName">尚无曲目</div>
+    <div class="title" id="setName">拖放音频/视频文件</div>
+    <div class="artist" id="trackName">支持 MP3 WAV MP4 WebM 等格式</div>
   </div>
 
-  <!-- Lyrics toggle + panel -->
+  <!-- Lyrics -->
   <button class="lyr-toggle" id="lyricsBtn" style="display:none">歌词</button>
   <div class="lyr-panel" id="lyricsPanel">
     <div class="lyr-inner" id="lyricsInner"></div>
@@ -305,9 +315,9 @@
 
   <!-- Drop zone -->
   <div class="drop-zone" id="dropZone">
-    拖放音频文件<br><small>或点击浏览  ·  mp3 wav ogg flac</small>
+    拖放文件到此处<br><small>音频 MP3 WAV OGG FLAC · 视频 MP4 WebM MOV</small>
   </div>
-  <input type="file" class="file-input-hidden" id="audioFileInput" accept="audio/*,.lrc" multiple>
+  <input type="file" class="file-input-hidden" id="audioFileInput" accept="audio/*,video/*,.lrc" multiple>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -331,55 +341,37 @@ const Store = (() => {
   };
 })();
 
-/* ── AudioEngine ── */
-const AudioEngine = (() => {
-  const a = new Audio(); const ls = {}; let cf = null;
-  function on(n,fn) { if(!ls[n]) ls[n]=[]; ls[n].push(fn); }
-  function em(n,d) { (ls[n]||[]).forEach(fn=>fn(d)); }
-  a.addEventListener('timeupdate', ()=>{ if(a.duration&&isFinite(a.duration)) em('t',{ct:a.currentTime,d:a.duration}); });
-  a.addEventListener('ended', ()=>em('end'));
-  a.addEventListener('loadedmetadata', ()=>em('meta',{d:a.duration}));
-  a.addEventListener('error', ()=>em('err',{f:cf}));
-  a.addEventListener('play', ()=>em('play'));
-  a.addEventListener('pause', ()=>em('pause'));
-  return {
-    load(f) { if(cf&&a.src&&a.src.startsWith('blob:')) URL.revokeObjectURL(a.src); cf=f; a.src=URL.createObjectURL(f); a.load(); },
-    play(){ const p=a.play(); if(p)p.catch(()=>{}); },
-    pause(){ a.pause(); },
-    seek(s){ if(isFinite(s)) a.currentTime=s; },
-    vol(v){ a.volume=Math.max(0,Math.min(1,v)); },
-    loop(b){ a.loop=b; },
-    ct(){ return a.currentTime; },
-    dur(){ return a.duration||0; },
-    paused(){ return a.paused; },
-    on,
-    destroy(){ a.pause(); if(a.src&&a.src.startsWith('blob:')) URL.revokeObjectURL(a.src); }
-  };
-})();
-
 /* ── Playlist ── */
 const Playlist = (() => {
   let files=[]; let idx=-1; const lrcMap=new Map();
+  const AUDIO_RX = /\.(mp3|wav|ogg|flac|m4a|aac|wma|opus|webm)$/i;
+  const VIDEO_RX = /\.(mp4|webm|mov|mkv|avi|m4v)$/i;
+
+  function isAudio(f) { return f.type.startsWith('audio/') || AUDIO_RX.test(f.name); }
+  function isVideo(f) { return f.type.startsWith('video/') || VIDEO_RX.test(f.name); }
+
   function add(nf) {
     const arr=Array.from(nf);
-    if(!arr.length) return {added:0,skipped:0,total:files.length};
+    if(!arr.length) return {added:0,skipped:0,total:files.length,videoCount:0};
     const lrcs=arr.filter(f=>/\.lrc$/i.test(f.name));
-    const audios=arr.filter(f=>f.type.startsWith('audio/')||/\.(mp3|wav|ogg|flac|m4a|aac|wma|opus|webm)$/i.test(f.name));
+    const media=arr.filter(f=>isAudio(f)||isVideo(f));
     lrcs.forEach(f=>{ const r=new FileReader(); r.onload=()=>lrcMap.set(f.name.replace(/\.lrc$/i,''),r.result); r.readAsText(f); });
-    const skipped=arr.length-audios.length-lrcs.length;
-    files.push(...audios); if(idx===-1&&files.length>0) idx=0;
-    return {added:audios.length,skipped,total:files.length};
+    const skipped=arr.length-media.length-lrcs.length;
+    files.push(...media); if(idx===-1&&files.length>0) idx=0;
+    const vc=media.filter(f=>isVideo(f)).length;
+    return {added:media.length,skipped,total:files.length,videoCount:vc};
   }
   function cur(){ return idx>=0?files[idx]:null; }
   function nxt(){ if(!files.length) return null; idx=(idx+1)%files.length; return files[idx]; }
   function gi(){ return idx; }
   function cnt(){ return files.length; }
+  function isCurrentVideo(){ const f=cur(); return f ? (isVideo(f)) : false; }
   function lrcFor(f) {
     if(!f) return null;
-    const base=f.name.replace(/\.(mp3|wav|ogg|flac|m4a|aac|wma|opus|webm)$/i,'');
+    const base=f.name.replace(/\.(mp3|wav|ogg|flac|m4a|aac|wma|opus|webm|mp4|webm|mov|mkv|avi|m4v)$/i,'');
     return lrcMap.get(base)||lrcMap.get(f.name)||null;
   }
-  return {add,cur,nxt,gi,cnt,lrcFor};
+  return {add,cur,nxt,gi,cnt,isCurrentVideo,lrcFor,isVideo};
 })();
 
 /* ── CoverManager ── */
@@ -396,6 +388,132 @@ const CoverManager = (() => {
   }
   return {set,cur:()=>dataURL,on};
 })();
+
+/* ── AudioEngine (uses <video> for both audio + video) ── */
+const AudioEngine = (() => {
+  const el = document.getElementById('videoEl');
+  const ls = {}; let cf = null;
+
+  function on(n,fn) { if(!ls[n]) ls[n]=[]; ls[n].push(fn); }
+  function em(n,d) { (ls[n]||[]).forEach(fn=>fn(d)); }
+
+  el.addEventListener('timeupdate', ()=>{ if(el.duration&&isFinite(el.duration)) em('t',{ct:el.currentTime,d:el.duration}); });
+  el.addEventListener('ended', ()=>em('end'));
+  el.addEventListener('loadedmetadata', ()=>em('meta',{d:el.duration}));
+  el.addEventListener('error', ()=>em('err',{f:cf}));
+  el.addEventListener('play', ()=>em('play'));
+  el.addEventListener('pause', ()=>em('pause'));
+
+  function load(f) {
+    if(cf&&el.src&&el.src.startsWith('blob:')) URL.revokeObjectURL(el.src);
+    cf=f; el.src=URL.createObjectURL(f); el.load();
+  }
+  return {
+    load,
+    play(){ const p=el.play(); if(p)p.catch(()=>{}); },
+    pause(){ el.pause(); },
+    seek(s){ if(isFinite(s)) el.currentTime=s; },
+    vol(v){ el.volume=Math.max(0,Math.min(1,v)); },
+    loop(b){ el.loop=b; },
+    ct(){ return el.currentTime; },
+    dur(){ return el.duration||0; },
+    paused(){ return el.paused; },
+    on,
+    el,
+    destroy(){ el.pause(); if(el.src&&el.src.startsWith('blob:')) URL.revokeObjectURL(el.src); }
+  };
+})();
+
+/* ── Visualizer (Web Audio API) ── */
+const Visualizer = (() => {
+  const canvas = document.getElementById('vizCanvas');
+  const ctx = canvas.getContext('2d');
+  let ac = null, source = null, analyser = null, raf = 0, running = false;
+  let dataArr = null;
+
+  function init() {
+    if (ac) return; // already initialized
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      source = ac.createMediaElementSource(AudioEngine.el);
+      analyser = ac.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.85;
+      source.connect(analyser);
+      analyser.connect(ac.destination);
+      dataArr = new Uint8Array(analyser.frequencyBinCount);
+    } catch (e) {
+      console.warn('Web Audio API not available:', e);
+    }
+  }
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = 48 * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = '48px';
+    ctx.scale(dpr, dpr);
+  }
+
+  function start() {
+    if (!ac) init();
+    if (!ac || running) return;
+    running = true;
+    canvas.classList.add('active');
+    resize();
+    draw();
+  }
+
+  function stop() {
+    running = false;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    canvas.classList.remove('active');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function draw() {
+    if (!running) return;
+    raf = requestAnimationFrame(draw);
+    if (!analyser) return;
+
+    analyser.getByteFrequencyData(dataArr);
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    ctx.clearRect(0, 0, w, h);
+
+    const barCount = 48;
+    const barW = (w / barCount) * 0.7;
+    const gap = (w / barCount) * 0.3;
+    const step = Math.floor(dataArr.length / barCount);
+
+    for (let i = 0; i < barCount; i++) {
+      const val = dataArr[i * step] / 255;
+      const barH = Math.max(2, val * h * 0.9);
+
+      // Gradient from accent to border color
+      const x = i * (barW + gap);
+      const y = h - barH;
+
+      // Color: accent when tall, muted when short
+      const ratio = val;
+      const r = Math.round(200 + (78 - 200) * ratio);
+      const g = Math.round(214 + (135 - 214) * ratio);
+      const b = Math.round(220 + (151 - 220) * ratio);
+
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.beginPath();
+      ctx.roundRect(x, y, barW, barH, 1.5);
+      ctx.fill();
+    }
+  }
+
+  window.addEventListener('resize', () => { if (running) resize(); });
+
+  return { start, stop, init };
+})();
+
 
 /* ── Lyrics ── */
 const Lyrics = (() => {
@@ -442,10 +560,12 @@ const Lyrics = (() => {
 
 /* ── UI ── */
 (function() {
-  const coverArea = document.getElementById('coverArea');
-  const coverEmpty = document.getElementById('coverEmpty');
+  const mediaArea = document.getElementById('mediaArea');
+  const mediaEmpty = document.getElementById('mediaEmpty');
   const coverImg = document.getElementById('coverImg');
+  const videoEl = document.getElementById('videoEl');
   const coverFileInput = document.getElementById('coverFileInput');
+  const vizCanvas = document.getElementById('vizCanvas');
   const setName = document.getElementById('setName');
   const trackName = document.getElementById('trackName');
   const lyricsBtn = document.getElementById('lyricsBtn');
@@ -461,7 +581,7 @@ const Lyrics = (() => {
   const audioFileInput = document.getElementById('audioFileInput');
   const toast = document.getElementById('toast');
 
-  let toastTimer, isSeeking=false, lyricsVisible=false;
+  let toastTimer, isSeeking=false, lyricsVisible=false, isVideoMode=false;
 
   function fmt(s) {
     if(!isFinite(s)||s<0) return '0:00';
@@ -472,15 +592,28 @@ const Lyrics = (() => {
     clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.classList.remove('show'),2500);
   }
 
+  function showMedia(mode) {
+    // mode: 'video' | 'cover' | 'empty'
+    mediaEmpty.style.display = 'none';
+    coverImg.style.display = 'none';
+    videoEl.style.display = 'none';
+    if (mode === 'video') { videoEl.style.display = 'block'; isVideoMode = true; }
+    else if (mode === 'cover') { coverImg.style.display = 'block'; isVideoMode = false; }
+    else { mediaEmpty.style.display = 'flex'; isVideoMode = false; }
+  }
+
   function updateMeta() {
     const f=Playlist.cur();
-    trackName.textContent = f ? `${Playlist.gi()+1} / ${Playlist.cnt()}  ·  ${f.name}` : '尚无曲目';
-    setName.textContent = Playlist.cnt()>0 ? `${Playlist.cnt()} tracks` : '拖放音频文件';
+    const type = f ? (Playlist.isVideo(f) ? 'Video' : 'Audio') : '';
+    trackName.textContent = f ? `${Playlist.gi()+1} / ${Playlist.cnt()} · ${type} · ${f.name}` : '尚无曲目';
+    setName.textContent = Playlist.cnt()>0 ? `${Playlist.cnt()} tracks` : '拖放文件到下方';
   }
   function updatePlayBtn() {
     if(Playlist.cnt()===0) { btnPlay.disabled=true; btnPlay.textContent='▶'; return; }
     btnPlay.disabled=false;
     btnPlay.textContent = AudioEngine.paused() ? '▶' : '⏸';
+    if (!AudioEngine.paused()) mediaArea.classList.add('playing');
+    else mediaArea.classList.remove('playing');
   }
 
   /* restore */
@@ -491,30 +624,62 @@ const Lyrics = (() => {
   btnLoop.textContent=loopActive?'loop on':'loop off';
 
   /* cover */
-  coverArea.addEventListener('click',()=>coverFileInput.click());
-  coverArea.addEventListener('dragover',e=>{ e.preventDefault(); });
-  coverArea.addEventListener('drop',e=>{ e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) CoverManager.set(f); });
+  mediaArea.addEventListener('click',()=>coverFileInput.click());
+  mediaArea.addEventListener('dragover',e=>{ e.preventDefault(); });
+  mediaArea.addEventListener('drop',e=>{
+    e.preventDefault();
+    // Check if dropped file is an image
+    const f=e.dataTransfer.files[0];
+    if(f && f.type.startsWith('image/')) { CoverManager.set(f); return; }
+    // Otherwise treat as media import
+    if(f) importFiles(e.dataTransfer.files);
+  });
   coverFileInput.addEventListener('change',()=>{ const f=coverFileInput.files[0]; if(f) CoverManager.set(f); coverFileInput.value=''; });
-  CoverManager.on('ch',({url})=>{ coverImg.src=url; coverImg.style.display='block'; coverEmpty.style.display='none'; });
+  CoverManager.on('ch',({url})=>{
+    if(!isVideoMode) showMedia('cover');
+    coverImg.src=url;
+  });
   CoverManager.on('err',({m})=>toast_(m));
 
   /* import */
   function importFiles(fl) {
     if(!fl||!fl.length) return;
+    // Separate images if user dragged images to the media area
+    const imgs=Array.from(fl).filter(f=>f.type.startsWith('image/'));
+    if(imgs.length===1&&Array.from(fl).length===1) { CoverManager.set(imgs[0]); return; }
+
     const r=Playlist.add(fl);
-    if(r.added===0) { toast_('未识别到支持的音频格式'); return; }
-    if(r.skipped>0) toast_(`已添加 ${r.added} 首，跳过 ${r.skipped} 个文件`);
+    if(r.added===0) { toast_('未识别到支持的格式 (MP3/WAV/MP4/WebM 等)'); return; }
+    if(r.skipped>0) toast_(`已添加 ${r.added} 首，跳过 ${r.skipped} 个文件${r.videoCount>0 ? ` (含 ${r.videoCount} 个视频)` : ''}`);
     if(r.added>0&&r.total===r.added) loadTrack();
     updateMeta(); updatePlayBtn();
     dropZone.classList.toggle('hidden',Playlist.cnt()>0);
   }
   async function loadTrack() {
     const f=Playlist.cur(); if(!f) return;
-    AudioEngine.load(f); updateMeta(); updatePlayBtn();
+    AudioEngine.load(f);
+    updateMeta(); updatePlayBtn();
+
+    // Show video or cover
+    if (Playlist.isCurrentVideo()) {
+      showMedia('video');
+    } else if (CoverManager.cur()) {
+      showMedia('cover');
+    } else {
+      showMedia('empty');
+    }
+
+    // Visualizer: init on first user interaction
+    Visualizer.init();
+
+    // Lyrics
     Lyrics.clear(); lyricsBtn.style.display='none'; lyricsPanel.classList.remove('open'); lyricsVisible=false;
     const lrc=Playlist.lrcFor(f);
     if(lrc) { Lyrics.parse(lrc); showLyrics(); }
-    else if(typeof jsmediatags!=='undefined') { const found=await Lyrics.fromAudio(f); if(found) showLyrics(); }
+    else if(!Playlist.isCurrentVideo()&&typeof jsmediatags!=='undefined') {
+      const found=await Lyrics.fromAudio(f);
+      if(found) showLyrics();
+    }
     renderLyrics();
   }
   function showLyrics() { if(!Lyrics.isEmpty()) lyricsBtn.style.display='inline-block'; }
@@ -540,20 +705,28 @@ const Lyrics = (() => {
   dropZone.addEventListener('drop',e=>{ e.preventDefault(); e.stopPropagation(); dzC=0; dropZone.classList.remove('drag-over'); importFiles(e.dataTransfer.files); });
   audioFileInput.addEventListener('change',()=>{ importFiles(audioFileInput.files); audioFileInput.value=''; });
 
-  /* play/pause */
-  btnPlay.addEventListener('click',()=>{ if(Playlist.cnt()===0) return; AudioEngine.paused()?AudioEngine.play():AudioEngine.pause(); updatePlayBtn(); });
+  /* play/pause — also starts visualizer */
+  btnPlay.addEventListener('click',()=>{
+    if(Playlist.cnt()===0) return;
+    if(AudioEngine.paused()) { AudioEngine.play(); Visualizer.start(); }
+    else { AudioEngine.pause(); Visualizer.stop(); }
+    updatePlayBtn();
+  });
+
+  AudioEngine.on('play', ()=>{ Visualizer.start(); btnPlay.textContent='⏸'; mediaArea.classList.add('playing'); });
+  AudioEngine.on('pause', ()=>{ Visualizer.stop(); btnPlay.textContent='▶'; mediaArea.classList.remove('playing'); });
 
   /* progress */
   progressBar.addEventListener('input',()=>{ isSeeking=true; const d=AudioEngine.dur(); if(d>0) timeCurrent.textContent=fmt((progressBar.value/100)*d); });
   progressBar.addEventListener('change',()=>{ const d=AudioEngine.dur(); if(d>0) AudioEngine.seek((progressBar.value/100)*d); isSeeking=false; });
-  AudioEngine.on('t',({ct,d})=>{ if(!isSeeking&&d>0) { progressBar.value=(ct/d)*100; timeCurrent.textContent=fmt(ct); if(lyricsVisible) { const idx=Lyrics.active(ct); renderLyrics(idx); } } });
+  AudioEngine.on('t',({ct,d})=>{ if(!isSeeking&&d>0) { progressBar.value=(ct/d)*100; timeCurrent.textContent=fmt(ct); if(lyricsVisible) renderLyrics(Lyrics.active(ct)); } });
   AudioEngine.on('meta',({d})=>{ progressBar.disabled=false; progressBar.value=0; timeTotal.textContent=fmt(d); timeCurrent.textContent='0:00'; updatePlayBtn(); });
 
   /* track nav */
   let consErr=0;
-  AudioEngine.on('end',()=>{ consErr=0; Playlist.nxt(); loadTrack(); AudioEngine.play(); });
+  AudioEngine.on('end',()=>{ consErr=0; Visualizer.stop(); Playlist.nxt(); loadTrack(); AudioEngine.play(); Visualizer.start(); });
   AudioEngine.on('meta',()=>{ consErr=0; });
-  AudioEngine.on('err',({f})=>{ consErr++; if(consErr>=Playlist.cnt()) { toast_('所有曲目均无法播放'); consErr=0; return; } toast_(`播放出错: ${f?f.name:'未知'}`); Playlist.nxt(); loadTrack(); AudioEngine.play(); });
+  AudioEngine.on('err',({f})=>{ consErr++; Visualizer.stop(); if(consErr>=Playlist.cnt()) { toast_('所有曲目均无法播放'); consErr=0; return; } toast_(`播放出错: ${f?f.name:'未知'}`); Playlist.nxt(); loadTrack(); AudioEngine.play(); Visualizer.start(); });
 
   /* volume */
   volumeSlider.addEventListener('input',()=>{ const v=volumeSlider.value/100; AudioEngine.vol(v); Store.set('volume',v); });
@@ -563,7 +736,16 @@ const Lyrics = (() => {
 
   /* global dnd */
   document.addEventListener('dragover',e=>{ e.preventDefault(); });
-  document.addEventListener('drop',e=>{ e.preventDefault(); if(coverArea.contains(e.target)) return; const files=e.dataTransfer.files; if(files.length>0) importFiles(files); });
+  document.addEventListener('drop',e=>{
+    e.preventDefault();
+    if(mediaArea.contains(e.target)) return;
+    if(dropZone.contains(e.target)) return;
+    const files=e.dataTransfer.files;
+    if(files.length>0) importFiles(files);
+  });
+
+  /* Init viz canvas size */
+  Visualizer.init();
 })();
 </script>
 </body>
