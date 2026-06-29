@@ -84,9 +84,9 @@
 
   /* ── Visualizer ── */
   .viz-canvas {
-    width: 100%; height: 40px; display: block;
+    width: 100%; height: 60px; display: block;
     border-radius: 6px; opacity: 0.55;
-    transition: opacity 0.3s var(--ease);
+    transition: opacity 0.45s var(--ease);
   }
   .viz-canvas.active { opacity: 1; }
 
@@ -378,17 +378,17 @@ const AudioEngine = (() => {
   };
 })();
 
-/* ── Visualizer (Web Audio, reads from AudioEngine) ── */
+/* ── Visualizer — smooth waveform line ── */
 const Visualizer = (() => {
   const canvas=document.getElementById('vizCanvas');
   const ctx=canvas.getContext('2d');
   let ac=null,source=null,analyser=null,raf=0,running=false,dataArr=null;
   let initFailed=false, sourceConnected=false;
+  let history=[]; // for smoothing
 
   function ensureContext(){
     if(initFailed)return false;
     if(ac){
-      // Resume if suspended (browser policy)
       if(ac.state==='suspended')ac.resume();
       return true;
     }
@@ -404,7 +404,7 @@ const Visualizer = (() => {
     try{
       source=ac.createMediaElementSource(AudioEngine.el);
       analyser=ac.createAnalyser();
-      analyser.fftSize=256;analyser.smoothingTimeConstant=0.85;
+      analyser.fftSize=2048;analyser.smoothingTimeConstant=0.7;
       source.connect(analyser);analyser.connect(ac.destination);
       dataArr=new Uint8Array(analyser.frequencyBinCount);
       sourceConnected=true;
@@ -414,8 +414,8 @@ const Visualizer = (() => {
   function resize(){
     const rect=canvas.parentElement.getBoundingClientRect();
     const dpr=window.devicePixelRatio||1;
-    canvas.width=rect.width*dpr;canvas.height=40*dpr;
-    canvas.style.width=rect.width+'px';canvas.style.height='40px';
+    canvas.width=rect.width*dpr;canvas.height=60*dpr;
+    canvas.style.width=rect.width+'px';canvas.style.height='60px';
     ctx.scale(dpr,dpr);
   }
 
@@ -424,6 +424,7 @@ const Visualizer = (() => {
     if(!ensureContext())return;
     connectSource();
     if(!analyser)return;
+    history=[];
     running=true;
     canvas.classList.add('active');resize();draw();
   }
@@ -431,27 +432,91 @@ const Visualizer = (() => {
     running=false;
     if(raf){cancelAnimationFrame(raf);raf=0;}
     canvas.classList.remove('active');
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // Fade out: gently clear
+    let alpha=1;
+    function fadeClear(){
+      if(running)return;
+      const w=canvas.width/(window.devicePixelRatio||1);
+      const h=canvas.height/(window.devicePixelRatio||1);
+      ctx.clearRect(0,0,w,h);
+      alpha-=0.08;
+      if(alpha>0&&!running)requestAnimationFrame(fadeClear);
+    }
+    fadeClear();
   }
   function draw(){
     if(!running)return;raf=requestAnimationFrame(draw);
     if(!analyser)return;
-    analyser.getByteFrequencyData(dataArr);
     const w=canvas.width/(window.devicePixelRatio||1);
     const h=canvas.height/(window.devicePixelRatio||1);
-    ctx.clearRect(0,0,w,h);
-    const barCount=48,barW=(w/barCount)*0.7,gap=(w/barCount)*0.3;
-    const step=Math.floor(dataArr.length/barCount);
-    for(let i=0;i<barCount;i++){
-      const val=dataArr[i*step]/255;
-      const barH=Math.max(2,val*h*0.9);
-      const x=i*(barW+gap),y=h-barH;
-      const r=Math.round(200+(78-200)*val);
-      const g=Math.round(214+(135-214)*val);
-      const b=Math.round(220+(151-220)*val);
-      ctx.fillStyle=`rgb(${r},${g},${b})`;
-      ctx.beginPath();ctx.roundRect(x,y,barW,barH,1.5);ctx.fill();
+    const mid=h/2;
+
+    // Get time-domain waveform data
+    const raw = new Uint8Array(analyser.fftSize);
+    analyser.getByteTimeDomainData(raw);
+
+    // Downsample to ~200 points
+    const step=Math.floor(raw.length/180);
+    const points=[];
+    for(let i=0;i<raw.length;i+=step){
+      points.push((raw[i]/255-0.5)*2); // normalize to [-1, 1]
     }
+
+    // Smooth with history (3-frame average)
+    history.push(points);
+    if(history.length>3)history.shift();
+    const smoothed=[];
+    for(let i=0;i<points.length;i++){
+      let sum=0;
+      for(let j=0;j<history.length;j++){
+        sum+=history[j][Math.min(i,history[j].length-1)];
+      }
+      smoothed.push(sum/history.length);
+    }
+
+    ctx.clearRect(0,0,w,h);
+
+    // Draw glow shadow
+    ctx.save();
+    ctx.shadowColor='rgba(78,135,151,0.18)';
+    ctx.shadowBlur=12;
+
+    // Gradient stroke
+    const grad=ctx.createLinearGradient(0,0,w,0);
+    grad.addColorStop(0,'#9aa8b4');
+    grad.addColorStop(0.25,'#7aacba');
+    grad.addColorStop(0.5,'#4e8797');
+    grad.addColorStop(0.75,'#7aacba');
+    grad.addColorStop(1,'#9aa8b4');
+
+    ctx.beginPath();
+    const xStep=w/(smoothed.length-1);
+    for(let i=0;i<smoothed.length;i++){
+      const x=i*xStep;
+      const y=mid+smoothed[i]*mid*0.82;
+      if(i===0)ctx.moveTo(x,y);
+      else ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle=grad;
+    ctx.lineWidth=1.6;
+    ctx.lineJoin='round';
+    ctx.stroke();
+    ctx.restore();
+
+    // Subtle fill below the line
+    ctx.beginPath();
+    for(let i=0;i<smoothed.length;i++){
+      const x=i*xStep;
+      const y=mid+smoothed[i]*mid*0.82;
+      if(i===0)ctx.moveTo(x,y);
+      else ctx.lineTo(x,y);
+    }
+    ctx.lineTo(w,mid);ctx.lineTo(0,mid);ctx.closePath();
+    const fillGrad=ctx.createLinearGradient(0,mid-mid*0.6,0,mid);
+    fillGrad.addColorStop(0,'rgba(78,135,151,0.06)');
+    fillGrad.addColorStop(1,'rgba(78,135,151,0)');
+    ctx.fillStyle=fillGrad;
+    ctx.fill();
   }
   window.addEventListener('resize',()=>{if(running)resize();});
   return{start,stop};
