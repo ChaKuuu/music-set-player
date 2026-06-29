@@ -21,8 +21,8 @@
     --viz-bar:  #c8d6dc;
     --shadow:  0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03);
     --shadow-hover: 0 2px 6px rgba(0,0,0,0.06), 0 8px 28px rgba(0,0,0,0.05);
-    --font-display: 'Noto Serif SC', 'Source Han Serif SC', 'SimSun', serif;
-    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-display: 'Noto Serif SC', serif;
+    --font-ui: 'Inter', system-ui, sans-serif;
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
@@ -38,56 +38,55 @@
   }
 
   .player {
-    width: 100%; max-width: 400px;
-    padding: 36px 28px 28px;
+    width: 100%; max-width: 440px;
+    padding: 28px 32px 24px;
     background: var(--bg-card);
     border-radius: 18px;
     box-shadow: var(--shadow);
     display: flex; flex-direction: column; align-items: center;
-    gap: 20px;
+    gap: 18px;
     animation: enter 0.5s var(--ease) both;
   }
   @keyframes enter { from { opacity: 0; transform: translateY(8px); } }
 
-  /* ── Cover / Video area ── */
-  .media-area {
-    width: 260px; height: 260px;
-    flex-shrink: 0;
+  /* ── Top media (video or image) ── */
+  .media-screen {
+    width: 100%;
+    aspect-ratio: 16 / 9;
     border-radius: 10px;
-    background: #dce3ea;
+    background: #e0e5ea;
     box-shadow: var(--shadow);
     overflow: hidden;
-    cursor: pointer;
     position: relative;
-    transition: box-shadow 0.3s var(--ease);
+    cursor: pointer;
     display: flex; align-items: center; justify-content: center;
+    transition: box-shadow 0.3s var(--ease);
   }
-  .media-area:hover { box-shadow: var(--shadow-hover); }
-  .media-area.playing { box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 8px 28px rgba(78,135,151,0.08); }
+  .media-screen:hover { box-shadow: var(--shadow-hover); }
+  .media-screen.playing { box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 8px 28px rgba(78,135,151,0.08); }
 
-  .media-area img, .media-area video {
+  .media-screen video,
+  .media-screen img {
     width: 100%; height: 100%; object-fit: cover; display: block;
   }
-  .media-area video { cursor: default; }
 
   .media-empty {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
     pointer-events: none; color: var(--ink-quiet);
+    position: absolute; inset: 0; justify-content: center;
   }
-  .media-empty .note { font-size: 36px; opacity: 0.35; }
+  .media-empty .icon { font-size: 32px; opacity: 0.3; }
   .media-empty .hint {
-    font-family: var(--font-ui); font-size: 10px; font-weight: 400;
+    font-family: var(--font-ui); font-size: 10px;
     letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ink-quiet); opacity: 0.6;
+    opacity: 0.5;
   }
 
-  /* ── Visualizer canvas ── */
+  /* ── Visualizer ── */
   .viz-canvas {
-    width: 100%; height: 48px;
-    display: block;
-    border-radius: 6px;
-    opacity: 0.55;
-    transition: opacity 0.4s var(--ease);
+    width: 100%; height: 40px; display: block;
+    border-radius: 6px; opacity: 0.55;
+    transition: opacity 0.3s var(--ease);
   }
   .viz-canvas.active { opacity: 1; }
 
@@ -98,7 +97,7 @@
     font-size: 22px; font-weight: 600; letter-spacing: 0.02em;
     line-height: 1.4; color: var(--ink);
   }
-  .meta .artist {
+  .meta .sub {
     font-family: var(--font-ui); font-size: 12px; font-weight: 400;
     color: var(--ink-dim); margin-top: 4px; letter-spacing: 0.04em;
   }
@@ -120,9 +119,8 @@
   }
   .progress-bar::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 10px; height: 10px;
-    background: var(--ink); border-radius: 50%;
-    cursor: pointer; opacity: 0;
+    width: 10px; height: 10px; background: var(--ink);
+    border-radius: 50%; cursor: pointer; opacity: 0;
     transition: opacity 0.2s, transform 0.15s;
   }
   .progress-bar:hover::-webkit-slider-thumb,
@@ -134,15 +132,10 @@
   }
 
   /* ── Controls ── */
-  .controls {
-    display: flex; align-items: center; gap: 24px;
-  }
+  .controls { display: flex; align-items: center; gap: 24px; }
   .btn-play {
-    width: 52px; height: 52px;
-    border-radius: 50%;
-    background: var(--ink);
-    color: var(--bg-card);
-    border: none;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--ink); color: var(--bg-card); border: none;
     font-size: 17px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: all 0.2s var(--ease);
@@ -152,7 +145,7 @@
   .btn-play:active { transform: scale(0.94); }
   .btn-play:disabled { opacity: 0.2; cursor: not-allowed; transform: none; box-shadow: none; }
 
-  /* ── Bottom bar ── */
+  /* ── Bottom row ── */
   .bottom-row {
     width: 100%; display: flex; align-items: center; justify-content: center; gap: 16px;
   }
@@ -164,13 +157,12 @@
   }
   .vol-slider {
     -webkit-appearance: none; appearance: none;
-    width: 72px; height: 2px;
-    background: var(--border); border-radius: 1px; cursor: pointer;
+    width: 72px; height: 2px; background: var(--border);
+    border-radius: 1px; cursor: pointer;
   }
   .vol-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 7px; height: 7px; background: var(--ink-dim);
-    border-radius: 50%; cursor: pointer;
+    -webkit-appearance: none; width: 7px; height: 7px;
+    background: var(--ink-dim); border-radius: 50%; cursor: pointer;
     transition: background 0.2s, transform 0.15s;
   }
   .vol-slider::-webkit-slider-thumb:hover { background: var(--ink); transform: scale(1.3); }
@@ -178,9 +170,7 @@
     width: 7px; height: 7px; background: var(--ink-dim);
     border: none; border-radius: 50%; cursor: pointer;
   }
-
   .sep { width: 1px; height: 12px; background: var(--border); }
-
   .loop-btn {
     background: none; border: none;
     font-family: var(--font-ui); font-size: 10px; font-weight: 400;
@@ -197,12 +187,10 @@
     font-family: var(--font-ui); font-size: 10px; font-weight: 400;
     color: var(--ink-quiet); cursor: pointer;
     padding: 4px 14px; border-radius: 20px;
-    letter-spacing: 0.06em;
-    transition: all 0.2s;
+    letter-spacing: 0.06em; transition: all 0.2s;
   }
   .lyr-toggle:hover { border-color: var(--border-hover); color: var(--ink-dim); }
   .lyr-toggle.active { border-color: var(--accent-soft); color: var(--accent); }
-
   .lyr-panel {
     width: 100%; max-height: 0; overflow: hidden;
     transition: max-height 0.45s var(--ease);
@@ -221,9 +209,8 @@
 
   /* ── Drop zone ── */
   .drop-zone {
-    width: 100%; padding: 20px 16px;
-    border: 1px dashed var(--border);
-    border-radius: 8px;
+    width: 100%; padding: 16px;
+    border: 1px dashed var(--border); border-radius: 8px;
     text-align: center; cursor: pointer;
     font-family: var(--font-ui); font-size: 11px; font-weight: 400;
     color: var(--ink-quiet); letter-spacing: 0.04em;
@@ -234,7 +221,6 @@
     background: rgba(0,0,0,0.01);
   }
   .drop-zone.hidden { display: none; }
-  .drop-zone small { opacity: 0.5; }
 
   /* ── Toast ── */
   .toast {
@@ -247,12 +233,10 @@
     z-index: 100;
   }
   .toast.show { opacity: 1; }
-
   .file-input-hidden { display: none; }
 
-  @media (max-width: 420px) {
-    .player { max-width: 100%; margin: 8px; padding: 24px 14px 20px; gap: 16px; }
-    .media-area { width: 220px; height: 220px; }
+  @media (max-width: 460px) {
+    .player { max-width: 100%; margin: 8px; padding: 20px 14px 18px; gap: 14px; }
     .meta .title { font-size: 19px; }
   }
 
@@ -265,45 +249,45 @@
 
 <div class="player">
 
-  <!-- Media: cover image or video -->
-  <div class="media-area" id="mediaArea" title="点击添加封面 · 支持视频文件">
+  <!-- ════ TOP: Video screen or cover image ════ -->
+  <div class="media-screen" id="mediaScreen" title="拖放视频或图片到此处 · 视频静音播放">
     <div class="media-empty" id="mediaEmpty">
-      <span class="note">♫</span>
-      <span class="hint">Add Cover / Video</span>
+      <span class="icon">♫</span>
+      <span class="hint">Drop Video or Image</span>
     </div>
+    <video id="visualVideo" src="" style="display:none" muted loop playsinline></video>
     <img id="coverImg" src="" alt="" style="display:none">
-    <video id="videoEl" src="" style="display:none" playsinline></video>
-    <input type="file" class="file-input-hidden" id="coverFileInput" accept="image/*">
+    <input type="file" class="file-input-hidden" id="visualFileInput" accept="video/*,image/*">
   </div>
 
-  <!-- Visualizer -->
+  <!-- ════ Visualizer ════ -->
   <canvas class="viz-canvas" id="vizCanvas"></canvas>
 
-  <!-- Meta -->
+  <!-- ════ Track info ════ -->
   <div class="meta">
-    <div class="title" id="setName">拖放音频/视频文件</div>
-    <div class="artist" id="trackName">支持 MP3 WAV MP4 WebM 等格式</div>
+    <div class="title" id="setName">拖放音频文件到下方</div>
+    <div class="sub" id="trackName">audio  ·  mp3 wav ogg flac</div>
   </div>
 
-  <!-- Lyrics -->
+  <!-- ════ Lyrics ════ -->
   <button class="lyr-toggle" id="lyricsBtn" style="display:none">歌词</button>
   <div class="lyr-panel" id="lyricsPanel">
     <div class="lyr-inner" id="lyricsInner"></div>
   </div>
 
-  <!-- Timeline -->
+  <!-- ════ Timeline ════ -->
   <div class="timeline">
     <span class="tm now" id="timeCurrent">0:00</span>
     <input type="range" class="progress-bar" id="progressBar" min="0" max="100" value="0" disabled>
     <span class="tm" id="timeTotal">0:00</span>
   </div>
 
-  <!-- Play -->
+  <!-- ════ Play ════ -->
   <div class="controls">
     <button class="btn-play" id="btnPlay" disabled>▶</button>
   </div>
 
-  <!-- Volume + Loop -->
+  <!-- ════ Volume + Loop ════ -->
   <div class="bottom-row">
     <div class="vol-group">
       <span class="vol-label">vol</span>
@@ -313,11 +297,11 @@
     <button class="loop-btn" id="btnLoop">loop off</button>
   </div>
 
-  <!-- Drop zone -->
+  <!-- ════ Audio drop zone ════ -->
   <div class="drop-zone" id="dropZone">
-    拖放文件到此处<br><small>音频 MP3 WAV OGG FLAC · 视频 MP4 WebM MOV</small>
+    拖放音频文件<br><small>mp3  wav  ogg  flac  m4a</small>
   </div>
-  <input type="file" class="file-input-hidden" id="audioFileInput" accept="audio/*,video/*,.lrc" multiple>
+  <input type="file" class="file-input-hidden" id="audioFileInput" accept="audio/*,.lrc" multiple>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -326,425 +310,358 @@
 <script>
 /* ── Env ── */
 if (typeof FileReader === 'undefined') {
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,sans-serif;background:#eef1f3;color:#26323c;"><p>浏览器版本过低，请使用最新版 Chrome / Firefox / Edge / Safari</p></div>';
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,sans-serif;background:#eef1f3;color:#26323c;"><p>浏览器版本过低</p></div>';
   throw new Error('No FileReader');
 }
 
 /* ── Store ── */
 const Store = (() => {
-  let ok = false; const P = 'msp:';
-  try { const k = P+'t'; localStorage.setItem(k,'1'); localStorage.removeItem(k); ok = true; } catch(_){}
-  const D = {volume:0.8,loop:false};
-  return {
-    get(k) { if(!ok) return D[k]; try { const r=localStorage.getItem(P+k); return r!=null ? JSON.parse(r) : D[k]; } catch(_){ return D[k]; } },
-    set(k,v) { if(!ok) return; try { localStorage.setItem(P+k, JSON.stringify(v)); } catch(_){} }
+  let ok=false; const P='msp:';
+  try{const k=P+'t';localStorage.setItem(k,'1');localStorage.removeItem(k);ok=true;}catch(_){}
+  const D={volume:0.8,loop:false};
+  return{
+    get(k){if(!ok)return D[k];try{const r=localStorage.getItem(P+k);return r!=null?JSON.parse(r):D[k];}catch(_){return D[k];}},
+    set(k,v){if(!ok)return;try{localStorage.setItem(P+k,JSON.stringify(v));}catch(_){}}
   };
 })();
 
 /* ── Playlist ── */
 const Playlist = (() => {
-  let files=[]; let idx=-1; const lrcMap=new Map();
-  const AUDIO_RX = /\.(mp3|wav|ogg|flac|m4a|aac|wma|opus|webm)$/i;
-  const VIDEO_RX = /\.(mp4|webm|mov|mkv|avi|m4v)$/i;
-
-  function isAudio(f) { return f.type.startsWith('audio/') || AUDIO_RX.test(f.name); }
-  function isVideo(f) { return f.type.startsWith('video/') || VIDEO_RX.test(f.name); }
-
-  function add(nf) {
+  let files=[],idx=-1; const lrcMap=new Map();
+  const AUDIO_RX=/\.(mp3|wav|ogg|flac|m4a|aac|wma|opus|webm)$/i;
+  function add(nf){
     const arr=Array.from(nf);
-    if(!arr.length) return {added:0,skipped:0,total:files.length,videoCount:0};
+    if(!arr.length)return{added:0,skipped:0,total:files.length};
     const lrcs=arr.filter(f=>/\.lrc$/i.test(f.name));
-    const media=arr.filter(f=>isAudio(f)||isVideo(f));
-    lrcs.forEach(f=>{ const r=new FileReader(); r.onload=()=>lrcMap.set(f.name.replace(/\.lrc$/i,''),r.result); r.readAsText(f); });
-    const skipped=arr.length-media.length-lrcs.length;
-    files.push(...media); if(idx===-1&&files.length>0) idx=0;
-    const vc=media.filter(f=>isVideo(f)).length;
-    return {added:media.length,skipped,total:files.length,videoCount:vc};
+    const audios=arr.filter(f=>f.type.startsWith('audio/')||AUDIO_RX.test(f.name));
+    lrcs.forEach(f=>{const r=new FileReader();r.onload=()=>lrcMap.set(f.name.replace(/\.lrc$/i,''),r.result);r.readAsText(f);});
+    const skipped=arr.length-audios.length-lrcs.length;
+    files.push(...audios);if(idx===-1&&files.length>0)idx=0;
+    return{added:audios.length,skipped,total:files.length};
   }
-  function cur(){ return idx>=0?files[idx]:null; }
-  function nxt(){ if(!files.length) return null; idx=(idx+1)%files.length; return files[idx]; }
-  function gi(){ return idx; }
-  function cnt(){ return files.length; }
-  function isCurrentVideo(){ const f=cur(); return f ? (isVideo(f)) : false; }
-  function lrcFor(f) {
-    if(!f) return null;
-    const base=f.name.replace(/\.(mp3|wav|ogg|flac|m4a|aac|wma|opus|webm|mp4|webm|mov|mkv|avi|m4v)$/i,'');
+  function cur(){return idx>=0?files[idx]:null;}
+  function nxt(){if(!files.length)return null;idx=(idx+1)%files.length;return files[idx];}
+  function gi(){return idx;}
+  function cnt(){return files.length;}
+  function lrcFor(f){
+    if(!f)return null;
+    const base=f.name.replace(AUDIO_RX,'');
     return lrcMap.get(base)||lrcMap.get(f.name)||null;
   }
-  return {add,cur,nxt,gi,cnt,isCurrentVideo,lrcFor,isVideo};
+  return{add,cur,nxt,gi,cnt,lrcFor};
 })();
 
-/* ── CoverManager ── */
-const CoverManager = (() => {
-  let dataURL=null; const ls={};
-  function on(n,fn){ if(!ls[n]) ls[n]=[]; ls[n].push(fn); }
-  function em(n,d){ (ls[n]||[]).forEach(fn=>fn(d)); }
-  function set(f) {
-    if(!f||!f.type.startsWith('image/')) { em('err',{m:'不是有效的图片文件'}); return; }
-    const r=new FileReader();
-    r.onload=()=>{ dataURL=r.result; em('ch',{url:dataURL}); };
-    r.onerror=()=>em('err',{m:'图片读取失败'});
-    r.readAsDataURL(f);
-  }
-  return {set,cur:()=>dataURL,on};
-})();
-
-/* ── AudioEngine (uses <video> for both audio + video) ── */
+/* ── AudioEngine ── */
 const AudioEngine = (() => {
-  const el = document.getElementById('videoEl');
-  const ls = {}; let cf = null;
-
-  function on(n,fn) { if(!ls[n]) ls[n]=[]; ls[n].push(fn); }
-  function em(n,d) { (ls[n]||[]).forEach(fn=>fn(d)); }
-
-  el.addEventListener('timeupdate', ()=>{ if(el.duration&&isFinite(el.duration)) em('t',{ct:el.currentTime,d:el.duration}); });
-  el.addEventListener('ended', ()=>em('end'));
-  el.addEventListener('loadedmetadata', ()=>em('meta',{d:el.duration}));
-  el.addEventListener('error', ()=>em('err',{f:cf}));
-  el.addEventListener('play', ()=>em('play'));
-  el.addEventListener('pause', ()=>em('pause'));
-
-  function load(f) {
-    if(cf&&el.src&&el.src.startsWith('blob:')) URL.revokeObjectURL(el.src);
-    cf=f; el.src=URL.createObjectURL(f); el.load();
-  }
-  return {
-    load,
-    play(){ const p=el.play(); if(p)p.catch(()=>{}); },
-    pause(){ el.pause(); },
-    seek(s){ if(isFinite(s)) el.currentTime=s; },
-    vol(v){ el.volume=Math.max(0,Math.min(1,v)); },
-    loop(b){ el.loop=b; },
-    ct(){ return el.currentTime; },
-    dur(){ return el.duration||0; },
-    paused(){ return el.paused; },
+  const a=new Audio();const ls={};let cf=null;
+  function on(n,fn){if(!ls[n])ls[n]=[];ls[n].push(fn);}
+  function em(n,d){(ls[n]||[]).forEach(fn=>fn(d));}
+  a.addEventListener('timeupdate',()=>{if(a.duration&&isFinite(a.duration))em('t',{ct:a.currentTime,d:a.duration});});
+  a.addEventListener('ended',()=>em('end'));
+  a.addEventListener('loadedmetadata',()=>em('meta',{d:a.duration}));
+  a.addEventListener('error',()=>em('err',{f:cf}));
+  a.addEventListener('play',()=>em('play'));
+  a.addEventListener('pause',()=>em('pause'));
+  return{
+    load(f){if(cf&&a.src&&a.src.startsWith('blob:'))URL.revokeObjectURL(a.src);cf=f;a.src=URL.createObjectURL(f);a.load();},
+    play(){const p=a.play();if(p)p.catch(()=>{});},
+    pause(){a.pause();},
+    seek(s){if(isFinite(s))a.currentTime=s;},
+    vol(v){a.volume=Math.max(0,Math.min(1,v));},
+    loop(b){a.loop=b;},
+    ct(){return a.currentTime;},
+    dur(){return a.duration||0;},
+    paused(){return a.paused;},
     on,
-    el,
-    destroy(){ el.pause(); if(el.src&&el.src.startsWith('blob:')) URL.revokeObjectURL(el.src); }
+    el:a,
+    destroy(){a.pause();if(a.src&&a.src.startsWith('blob:'))URL.revokeObjectURL(a.src);}
   };
 })();
 
-/* ── Visualizer (Web Audio API) ── */
+/* ── Visualizer (Web Audio, reads from AudioEngine) ── */
 const Visualizer = (() => {
-  const canvas = document.getElementById('vizCanvas');
-  const ctx = canvas.getContext('2d');
-  let ac = null, source = null, analyser = null, raf = 0, running = false;
-  let dataArr = null;
+  const canvas=document.getElementById('vizCanvas');
+  const ctx=canvas.getContext('2d');
+  let ac=null,source=null,analyser=null,raf=0,running=false,dataArr=null;
 
-  function init() {
-    if (ac) return; // already initialized
-    try {
-      ac = new (window.AudioContext || window.webkitAudioContext)();
-      source = ac.createMediaElementSource(AudioEngine.el);
-      analyser = ac.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.85;
-      source.connect(analyser);
-      analyser.connect(ac.destination);
-      dataArr = new Uint8Array(analyser.frequencyBinCount);
-    } catch (e) {
-      console.warn('Web Audio API not available:', e);
-    }
+  function init(){
+    if(ac)return;
+    try{
+      ac=new(window.AudioContext||window.webkitAudioContext)();
+      source=ac.createMediaElementSource(AudioEngine.el);
+      analyser=ac.createAnalyser();
+      analyser.fftSize=256;analyser.smoothingTimeConstant=0.85;
+      source.connect(analyser);analyser.connect(ac.destination);
+      dataArr=new Uint8Array(analyser.frequencyBinCount);
+    }catch(e){console.warn('Web Audio API unavailable:',e);}
   }
 
-  function resize() {
-    const rect = canvas.parentElement.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = rect.width * dpr;
-    canvas.height = 48 * dpr;
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = '48px';
-    ctx.scale(dpr, dpr);
+  function resize(){
+    const rect=canvas.parentElement.getBoundingClientRect();
+    const dpr=window.devicePixelRatio||1;
+    canvas.width=rect.width*dpr;canvas.height=40*dpr;
+    canvas.style.width=rect.width+'px';canvas.style.height='40px';
+    ctx.scale(dpr,dpr);
   }
 
-  function start() {
-    if (!ac) init();
-    if (!ac || running) return;
-    running = true;
-    canvas.classList.add('active');
-    resize();
-    draw();
+  function start(){
+    if(!ac)init();if(!ac||running)return;running=true;
+    canvas.classList.add('active');resize();draw();
   }
-
-  function stop() {
-    running = false;
-    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+  function stop(){
+    running=false;
+    if(raf){cancelAnimationFrame(raf);raf=0;}
     canvas.classList.remove('active');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
   }
-
-  function draw() {
-    if (!running) return;
-    raf = requestAnimationFrame(draw);
-    if (!analyser) return;
-
+  function draw(){
+    if(!running)return;raf=requestAnimationFrame(draw);
+    if(!analyser)return;
     analyser.getByteFrequencyData(dataArr);
-    const w = canvas.width / (window.devicePixelRatio || 1);
-    const h = canvas.height / (window.devicePixelRatio || 1);
-    ctx.clearRect(0, 0, w, h);
-
-    const barCount = 48;
-    const barW = (w / barCount) * 0.7;
-    const gap = (w / barCount) * 0.3;
-    const step = Math.floor(dataArr.length / barCount);
-
-    for (let i = 0; i < barCount; i++) {
-      const val = dataArr[i * step] / 255;
-      const barH = Math.max(2, val * h * 0.9);
-
-      // Gradient from accent to border color
-      const x = i * (barW + gap);
-      const y = h - barH;
-
-      // Color: accent when tall, muted when short
-      const ratio = val;
-      const r = Math.round(200 + (78 - 200) * ratio);
-      const g = Math.round(214 + (135 - 214) * ratio);
-      const b = Math.round(220 + (151 - 220) * ratio);
-
-      ctx.fillStyle = `rgb(${r},${g},${b})`;
-      ctx.beginPath();
-      ctx.roundRect(x, y, barW, barH, 1.5);
-      ctx.fill();
+    const w=canvas.width/(window.devicePixelRatio||1);
+    const h=canvas.height/(window.devicePixelRatio||1);
+    ctx.clearRect(0,0,w,h);
+    const barCount=48,barW=(w/barCount)*0.7,gap=(w/barCount)*0.3;
+    const step=Math.floor(dataArr.length/barCount);
+    for(let i=0;i<barCount;i++){
+      const val=dataArr[i*step]/255;
+      const barH=Math.max(2,val*h*0.9);
+      const x=i*(barW+gap),y=h-barH;
+      const r=Math.round(200+(78-200)*val);
+      const g=Math.round(214+(135-214)*val);
+      const b=Math.round(220+(151-220)*val);
+      ctx.fillStyle=`rgb(${r},${g},${b})`;
+      ctx.beginPath();ctx.roundRect(x,y,barW,barH,1.5);ctx.fill();
     }
   }
-
-  window.addEventListener('resize', () => { if (running) resize(); });
-
-  return { start, stop, init };
+  window.addEventListener('resize',()=>{if(running)resize();});
+  return{start,stop,init};
 })();
-
 
 /* ── Lyrics ── */
 const Lyrics = (() => {
-  let parsed=[], hasTS=false; const ls={};
-  function on(n,fn){ if(!ls[n]) ls[n]=[]; ls[n].push(fn); }
-  function em(n,d){ (ls[n]||[]).forEach(fn=>fn(d)); }
-  function parse(text) {
-    const lines=[]; const re=/^\[(\d{2}):(\d{2})(?:[.:](\d{2,3}))?\](.*)$/;
-    for(const raw of text.split(/\r?\n/)) {
+  let parsed=[],hasTS=false;const ls={};
+  function on(n,fn){if(!ls[n])ls[n]=[];ls[n].push(fn);}
+  function em(n,d){(ls[n]||[]).forEach(fn=>fn(d));}
+  function parse(text){
+    const lines=[];const re=/^\[(\d{2}):(\d{2})(?:[.:](\d{2,3}))?\](.*)$/;
+    for(const raw of text.split(/\r?\n/)){
       const m=raw.match(re);
-      if(m) { let ms=m[3]?parseInt(m[3]):0; if(ms<100) ms*=10; lines.push({t:parseInt(m[1])*60+parseInt(m[2])+ms/1000,txt:m[4].trim()}); }
-      else { const t=raw.trim(); if(t&&!t.startsWith('[')) lines.push({t:-1,txt:t}); }
+      if(m){let ms=m[3]?parseInt(m[3]):0;if(ms<100)ms*=10;lines.push({t:parseInt(m[1])*60+parseInt(m[2])+ms/1000,txt:m[4].trim()});}
+      else{const t=raw.trim();if(t&&!t.startsWith('['))lines.push({t:-1,txt:t});}
     }
-    parsed=lines; hasTS=lines.some(l=>l.t>=0); em('ch',{lines:parsed,hasTS});
+    parsed=lines;hasTS=lines.some(l=>l.t>=0);em('ch',{lines:parsed,hasTS});
   }
-  function plain(text) {
+  function plain(text){
     parsed=text.split(/\r?\n/).filter(t=>t.trim()).map(t=>({t:-1,txt:t.trim()}));
-    hasTS=false; em('ch',{lines:parsed,hasTS:false});
+    hasTS=false;em('ch',{lines:parsed,hasTS:false});
   }
-  function active(ct) {
-    if(!hasTS||!parsed.length) return -1;
-    let a=-1; for(let i=0;i<parsed.length;i++) { if(parsed[i].t>=0&&parsed[i].t<=ct) a=i; }
+  function active(ct){
+    if(!hasTS||!parsed.length)return -1;
+    let a=-1;for(let i=0;i<parsed.length;i++){if(parsed[i].t>=0&&parsed[i].t<=ct)a=i;}
     return a;
   }
-  async function fromAudio(file) {
-    if(typeof jsmediatags==='undefined') return false;
+  async function fromAudio(file){
+    if(typeof jsmediatags==='undefined')return false;
     return new Promise(res=>{
       jsmediatags.read(file,{
-        onSuccess: (tag)=>{
+        onSuccess:(tag)=>{
           const t=tag.tags;
-          if(t.lyrics&&typeof t.lyrics==='string') { plain(t.lyrics); res(true); }
-          else if(t.lyrics&&t.lyrics.lyrics) { plain(t.lyrics.lyrics); res(true); }
-          else if(t.unsynchronisedLyrics&&typeof t.unsynchronisedLyrics==='string') { plain(t.unsynchronisedLyrics); res(true); }
-          else if(t.unsynchronisedLyrics&&t.unsynchronisedLyrics.lyrics) { plain(t.unsynchronisedLyrics.lyrics); res(true); }
+          if(t.lyrics&&typeof t.lyrics==='string'){plain(t.lyrics);res(true);}
+          else if(t.lyrics&&t.lyrics.lyrics){plain(t.lyrics.lyrics);res(true);}
+          else if(t.unsynchronisedLyrics&&typeof t.unsynchronisedLyrics==='string'){plain(t.unsynchronisedLyrics);res(true);}
+          else if(t.unsynchronisedLyrics&&t.unsynchronisedLyrics.lyrics){plain(t.unsynchronisedLyrics.lyrics);res(true);}
           else res(false);
-        },
-        onError: ()=>res(false)
+        },onError:()=>res(false)
       });
     });
   }
-  function clear() { parsed=[]; hasTS=false; em('ch',{lines:[],hasTS:false}); }
-  return {parse,plain,active,fromAudio,clear,isEmpty:()=>parsed.length===0,lines:()=>parsed,on};
+  function clear(){parsed=[];hasTS=false;em('ch',{lines:[],hasTS:false});}
+  return{parse,plain,active,fromAudio,clear,isEmpty:()=>parsed.length===0,lines:()=>parsed,on};
+})();
+
+/* ── VisualScreen: top area — separate video (muted) or image ── */
+const VisualScreen = (() => {
+  const screen=document.getElementById('mediaScreen');
+  const vEl=document.getElementById('visualVideo');
+  const imgEl=document.getElementById('coverImg');
+  const empty=document.getElementById('mediaEmpty');
+  let mode='empty'; // 'video' | 'image' | 'empty'
+
+  function showVideo(file){
+    if(vEl.src&&vEl.src.startsWith('blob:'))URL.revokeObjectURL(vEl.src);
+    vEl.src=URL.createObjectURL(file);
+    vEl.style.display='block';imgEl.style.display='none';empty.style.display='none';
+    vEl.play().catch(()=>{});
+    mode='video';
+  }
+  function showImage(dataURL){
+    vEl.pause();vEl.style.display='none';
+    imgEl.src=dataURL;imgEl.style.display='block';empty.style.display='none';
+    mode='image';
+  }
+  function showEmpty(){
+    vEl.pause();vEl.style.display='none';imgEl.style.display='none';empty.style.display='flex';
+    mode='empty';
+  }
+
+  function handleFile(f){
+    if(!f)return;
+    if(f.type.startsWith('video/')){showVideo(f);}
+    else if(f.type.startsWith('image/')){
+      const r=new FileReader();
+      r.onload=()=>showImage(r.result);
+      r.readAsDataURL(f);
+    }
+  }
+
+  return{showVideo,showImage,showEmpty,handleFile,getMode:()=>mode};
 })();
 
 /* ── UI ── */
-(function() {
-  const mediaArea = document.getElementById('mediaArea');
-  const mediaEmpty = document.getElementById('mediaEmpty');
-  const coverImg = document.getElementById('coverImg');
-  const videoEl = document.getElementById('videoEl');
-  const coverFileInput = document.getElementById('coverFileInput');
-  const vizCanvas = document.getElementById('vizCanvas');
-  const setName = document.getElementById('setName');
-  const trackName = document.getElementById('trackName');
-  const lyricsBtn = document.getElementById('lyricsBtn');
-  const lyricsPanel = document.getElementById('lyricsPanel');
-  const lyricsInner = document.getElementById('lyricsInner');
-  const progressBar = document.getElementById('progressBar');
-  const timeCurrent = document.getElementById('timeCurrent');
-  const timeTotal = document.getElementById('timeTotal');
-  const btnPlay = document.getElementById('btnPlay');
-  const volumeSlider = document.getElementById('volumeSlider');
-  const btnLoop = document.getElementById('btnLoop');
-  const dropZone = document.getElementById('dropZone');
-  const audioFileInput = document.getElementById('audioFileInput');
-  const toast = document.getElementById('toast');
+(function(){
+  const mediaScreen=document.getElementById('mediaScreen');
+  const visualFileInput=document.getElementById('visualFileInput');
+  const vizCanvas=document.getElementById('vizCanvas');
+  const setName=document.getElementById('setName');
+  const trackName=document.getElementById('trackName');
+  const lyricsBtn=document.getElementById('lyricsBtn');
+  const lyricsPanel=document.getElementById('lyricsPanel');
+  const lyricsInner=document.getElementById('lyricsInner');
+  const progressBar=document.getElementById('progressBar');
+  const timeCurrent=document.getElementById('timeCurrent');
+  const timeTotal=document.getElementById('timeTotal');
+  const btnPlay=document.getElementById('btnPlay');
+  const volumeSlider=document.getElementById('volumeSlider');
+  const btnLoop=document.getElementById('btnLoop');
+  const dropZone=document.getElementById('dropZone');
+  const audioFileInput=document.getElementById('audioFileInput');
+  const toast=document.getElementById('toast');
 
-  let toastTimer, isSeeking=false, lyricsVisible=false, isVideoMode=false;
+  let toastTimer,isSeeking=false,lyricsVisible=false;
 
-  function fmt(s) {
-    if(!isFinite(s)||s<0) return '0:00';
+  function fmt(s){
+    if(!isFinite(s)||s<0)return'0:00';
     return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
   }
-  function toast_(msg) {
-    toast.textContent=msg; toast.classList.add('show');
-    clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.classList.remove('show'),2500);
+  function toast_(msg){
+    toast.textContent=msg;toast.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2500);
   }
-
-  function showMedia(mode) {
-    // mode: 'video' | 'cover' | 'empty'
-    mediaEmpty.style.display = 'none';
-    coverImg.style.display = 'none';
-    videoEl.style.display = 'none';
-    if (mode === 'video') { videoEl.style.display = 'block'; isVideoMode = true; }
-    else if (mode === 'cover') { coverImg.style.display = 'block'; isVideoMode = false; }
-    else { mediaEmpty.style.display = 'flex'; isVideoMode = false; }
-  }
-
-  function updateMeta() {
+  function updateMeta(){
     const f=Playlist.cur();
-    const type = f ? (Playlist.isVideo(f) ? 'Video' : 'Audio') : '';
-    trackName.textContent = f ? `${Playlist.gi()+1} / ${Playlist.cnt()} · ${type} · ${f.name}` : '尚无曲目';
-    setName.textContent = Playlist.cnt()>0 ? `${Playlist.cnt()} tracks` : '拖放文件到下方';
+    trackName.textContent=f?`${Playlist.gi()+1} / ${Playlist.cnt()}  ·  ${f.name}`:'尚无曲目';
+    setName.textContent=Playlist.cnt()>0?`${Playlist.cnt()} tracks`:'拖放音频文件到下方';
   }
-  function updatePlayBtn() {
-    if(Playlist.cnt()===0) { btnPlay.disabled=true; btnPlay.textContent='▶'; return; }
+  function updatePlayBtn(){
+    if(Playlist.cnt()===0){btnPlay.disabled=true;btnPlay.textContent='▶';return;}
     btnPlay.disabled=false;
-    btnPlay.textContent = AudioEngine.paused() ? '▶' : '⏸';
-    if (!AudioEngine.paused()) mediaArea.classList.add('playing');
-    else mediaArea.classList.remove('playing');
+    btnPlay.textContent=AudioEngine.paused()?'▶':'⏸';
   }
 
-  /* restore */
-  const sv=Store.get('volume'), sl=Store.get('loop');
-  AudioEngine.vol(sv); volumeSlider.value=Math.round(sv*100);
-  let loopActive=sl; AudioEngine.loop(sl);
+  /* Restore */
+  const sv=Store.get('volume'),sl=Store.get('loop');
+  AudioEngine.vol(sv);volumeSlider.value=Math.round(sv*100);
+  let loopActive=sl;AudioEngine.loop(sl);
   btnLoop.classList.toggle('active',loopActive);
   btnLoop.textContent=loopActive?'loop on':'loop off';
 
-  /* cover */
-  mediaArea.addEventListener('click',()=>coverFileInput.click());
-  mediaArea.addEventListener('dragover',e=>{ e.preventDefault(); });
-  mediaArea.addEventListener('drop',e=>{
-    e.preventDefault();
-    // Check if dropped file is an image
+  /* ── MEDIA SCREEN: independent video/image ── */
+  mediaScreen.addEventListener('click',()=>visualFileInput.click());
+  mediaScreen.addEventListener('dragover',e=>{e.preventDefault();});
+  mediaScreen.addEventListener('drop',e=>{
+    e.preventDefault();e.stopPropagation();
     const f=e.dataTransfer.files[0];
-    if(f && f.type.startsWith('image/')) { CoverManager.set(f); return; }
-    // Otherwise treat as media import
-    if(f) importFiles(e.dataTransfer.files);
+    if(f)VisualScreen.handleFile(f);
   });
-  coverFileInput.addEventListener('change',()=>{ const f=coverFileInput.files[0]; if(f) CoverManager.set(f); coverFileInput.value=''; });
-  CoverManager.on('ch',({url})=>{
-    if(!isVideoMode) showMedia('cover');
-    coverImg.src=url;
+  visualFileInput.addEventListener('change',()=>{
+    const f=visualFileInput.files[0];
+    if(f)VisualScreen.handleFile(f);
+    visualFileInput.value='';
   });
-  CoverManager.on('err',({m})=>toast_(m));
 
-  /* import */
-  function importFiles(fl) {
-    if(!fl||!fl.length) return;
-    // Separate images if user dragged images to the media area
-    const imgs=Array.from(fl).filter(f=>f.type.startsWith('image/'));
-    if(imgs.length===1&&Array.from(fl).length===1) { CoverManager.set(imgs[0]); return; }
-
+  /* ── AUDIO IMPORT ── */
+  function importAudio(fl){
+    if(!fl||!fl.length)return;
     const r=Playlist.add(fl);
-    if(r.added===0) { toast_('未识别到支持的格式 (MP3/WAV/MP4/WebM 等)'); return; }
-    if(r.skipped>0) toast_(`已添加 ${r.added} 首，跳过 ${r.skipped} 个文件${r.videoCount>0 ? ` (含 ${r.videoCount} 个视频)` : ''}`);
-    if(r.added>0&&r.total===r.added) loadTrack();
-    updateMeta(); updatePlayBtn();
+    if(r.added===0){toast_('未识别到支持的音频格式');return;}
+    if(r.skipped>0)toast_(`已添加 ${r.added} 首，跳过 ${r.skipped} 个文件`);
+    if(r.added>0&&r.total===r.added)loadTrack();
+    updateMeta();updatePlayBtn();
     dropZone.classList.toggle('hidden',Playlist.cnt()>0);
   }
-  async function loadTrack() {
-    const f=Playlist.cur(); if(!f) return;
-    AudioEngine.load(f);
-    updateMeta(); updatePlayBtn();
+  async function loadTrack(){
+    const f=Playlist.cur();if(!f)return;
+    AudioEngine.load(f);updateMeta();updatePlayBtn();
 
-    // Show video or cover
-    if (Playlist.isCurrentVideo()) {
-      showMedia('video');
-    } else if (CoverManager.cur()) {
-      showMedia('cover');
-    } else {
-      showMedia('empty');
-    }
-
-    // Visualizer: init on first user interaction
-    Visualizer.init();
-
-    // Lyrics
-    Lyrics.clear(); lyricsBtn.style.display='none'; lyricsPanel.classList.remove('open'); lyricsVisible=false;
+    Lyrics.clear();lyricsBtn.style.display='none';lyricsPanel.classList.remove('open');lyricsVisible=false;
     const lrc=Playlist.lrcFor(f);
-    if(lrc) { Lyrics.parse(lrc); showLyrics(); }
-    else if(!Playlist.isCurrentVideo()&&typeof jsmediatags!=='undefined') {
-      const found=await Lyrics.fromAudio(f);
-      if(found) showLyrics();
-    }
+    if(lrc){Lyrics.parse(lrc);showLyrics();}
+    else if(typeof jsmediatags!=='undefined'){const found=await Lyrics.fromAudio(f);if(found)showLyrics();}
     renderLyrics();
   }
-  function showLyrics() { if(!Lyrics.isEmpty()) lyricsBtn.style.display='inline-block'; }
-  function renderLyrics(activeIdx=-1) {
-    const lines=Lyrics.lines(); if(!lines.length) { lyricsInner.innerHTML=''; return; }
+  function showLyrics(){if(!Lyrics.isEmpty())lyricsBtn.style.display='inline-block';}
+  function renderLyrics(activeIdx=-1){
+    const lines=Lyrics.lines();if(!lines.length){lyricsInner.innerHTML='';return;}
     lyricsInner.innerHTML=lines.map((l,i)=>{
-      let cls='line'; if(i===activeIdx) cls+=' active'; if(!l.txt) cls+=' empty';
-      return `<div class="${cls}">${l.txt||'&nbsp;'}</div>`;
+      let cls='line';if(i===activeIdx)cls+=' active';if(!l.txt)cls+=' empty';
+      return`<div class="${cls}">${l.txt||'&nbsp;'}</div>`;
     }).join('');
-    if(activeIdx>=0) { const el=lyricsInner.children[activeIdx]; if(el) el.scrollIntoView({block:'center',behavior:'smooth'}); }
+    if(activeIdx>=0){const el=lyricsInner.children[activeIdx];if(el)el.scrollIntoView({block:'center',behavior:'smooth'});}
   }
   lyricsBtn.addEventListener('click',()=>{
-    lyricsVisible=!lyricsVisible; lyricsPanel.classList.toggle('open',lyricsVisible);
+    lyricsVisible=!lyricsVisible;lyricsPanel.classList.toggle('open',lyricsVisible);
     lyricsBtn.classList.toggle('active',lyricsVisible);
     renderLyrics();
   });
 
-  /* drop zone */
+  /* ── DROP ZONE ── */
   dropZone.addEventListener('click',()=>audioFileInput.click());
   let dzC=0;
-  dropZone.addEventListener('dragenter',e=>{ e.preventDefault(); dzC++; dropZone.classList.add('drag-over'); });
-  dropZone.addEventListener('dragleave',()=>{ dzC--; if(dzC===0) dropZone.classList.remove('drag-over'); });
-  dropZone.addEventListener('drop',e=>{ e.preventDefault(); e.stopPropagation(); dzC=0; dropZone.classList.remove('drag-over'); importFiles(e.dataTransfer.files); });
-  audioFileInput.addEventListener('change',()=>{ importFiles(audioFileInput.files); audioFileInput.value=''; });
+  dropZone.addEventListener('dragenter',e=>{e.preventDefault();dzC++;dropZone.classList.add('drag-over');});
+  dropZone.addEventListener('dragleave',()=>{dzC--;if(dzC===0)dropZone.classList.remove('drag-over');});
+  dropZone.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();dzC=0;dropZone.classList.remove('drag-over');importAudio(e.dataTransfer.files);});
+  audioFileInput.addEventListener('change',()=>{importAudio(audioFileInput.files);audioFileInput.value='';});
 
-  /* play/pause — also starts visualizer */
+  /* ── PLAY / PAUSE ── */
   btnPlay.addEventListener('click',()=>{
-    if(Playlist.cnt()===0) return;
-    if(AudioEngine.paused()) { AudioEngine.play(); Visualizer.start(); }
-    else { AudioEngine.pause(); Visualizer.stop(); }
+    if(Playlist.cnt()===0)return;
+    if(AudioEngine.paused()){AudioEngine.play();Visualizer.start();mediaScreen.classList.add('playing');}
+    else{AudioEngine.pause();Visualizer.stop();mediaScreen.classList.remove('playing');}
     updatePlayBtn();
   });
+  AudioEngine.on('play',()=>{Visualizer.start();btnPlay.textContent='⏸';mediaScreen.classList.add('playing');});
+  AudioEngine.on('pause',()=>{Visualizer.stop();btnPlay.textContent='▶';mediaScreen.classList.remove('playing');});
 
-  AudioEngine.on('play', ()=>{ Visualizer.start(); btnPlay.textContent='⏸'; mediaArea.classList.add('playing'); });
-  AudioEngine.on('pause', ()=>{ Visualizer.stop(); btnPlay.textContent='▶'; mediaArea.classList.remove('playing'); });
+  /* ── PROGRESS ── */
+  progressBar.addEventListener('input',()=>{isSeeking=true;const d=AudioEngine.dur();if(d>0)timeCurrent.textContent=fmt((progressBar.value/100)*d);});
+  progressBar.addEventListener('change',()=>{const d=AudioEngine.dur();if(d>0)AudioEngine.seek((progressBar.value/100)*d);isSeeking=false;});
+  AudioEngine.on('t',({ct,d})=>{if(!isSeeking&&d>0){progressBar.value=(ct/d)*100;timeCurrent.textContent=fmt(ct);if(lyricsVisible)renderLyrics(Lyrics.active(ct));}});
+  AudioEngine.on('meta',({d})=>{progressBar.disabled=false;progressBar.value=0;timeTotal.textContent=fmt(d);timeCurrent.textContent='0:00';updatePlayBtn();});
 
-  /* progress */
-  progressBar.addEventListener('input',()=>{ isSeeking=true; const d=AudioEngine.dur(); if(d>0) timeCurrent.textContent=fmt((progressBar.value/100)*d); });
-  progressBar.addEventListener('change',()=>{ const d=AudioEngine.dur(); if(d>0) AudioEngine.seek((progressBar.value/100)*d); isSeeking=false; });
-  AudioEngine.on('t',({ct,d})=>{ if(!isSeeking&&d>0) { progressBar.value=(ct/d)*100; timeCurrent.textContent=fmt(ct); if(lyricsVisible) renderLyrics(Lyrics.active(ct)); } });
-  AudioEngine.on('meta',({d})=>{ progressBar.disabled=false; progressBar.value=0; timeTotal.textContent=fmt(d); timeCurrent.textContent='0:00'; updatePlayBtn(); });
-
-  /* track nav */
+  /* ── TRACK NAV ── */
   let consErr=0;
-  AudioEngine.on('end',()=>{ consErr=0; Visualizer.stop(); Playlist.nxt(); loadTrack(); AudioEngine.play(); Visualizer.start(); });
-  AudioEngine.on('meta',()=>{ consErr=0; });
-  AudioEngine.on('err',({f})=>{ consErr++; Visualizer.stop(); if(consErr>=Playlist.cnt()) { toast_('所有曲目均无法播放'); consErr=0; return; } toast_(`播放出错: ${f?f.name:'未知'}`); Playlist.nxt(); loadTrack(); AudioEngine.play(); Visualizer.start(); });
+  AudioEngine.on('end',()=>{consErr=0;Visualizer.stop();Playlist.nxt();loadTrack();AudioEngine.play();Visualizer.start();});
+  AudioEngine.on('meta',()=>{consErr=0;});
+  AudioEngine.on('err',({f})=>{consErr++;Visualizer.stop();if(consErr>=Playlist.cnt()){toast_('所有曲目均无法播放');consErr=0;return;}toast_(`播放出错: ${f?f.name:'未知'}`);Playlist.nxt();loadTrack();AudioEngine.play();Visualizer.start();});
 
-  /* volume */
-  volumeSlider.addEventListener('input',()=>{ const v=volumeSlider.value/100; AudioEngine.vol(v); Store.set('volume',v); });
+  /* ── VOLUME ── */
+  volumeSlider.addEventListener('input',()=>{const v=volumeSlider.value/100;AudioEngine.vol(v);Store.set('volume',v);});
 
-  /* loop */
-  btnLoop.addEventListener('click',()=>{ loopActive=!loopActive; AudioEngine.loop(loopActive); Store.set('loop',loopActive); btnLoop.classList.toggle('active',loopActive); btnLoop.textContent=loopActive?'loop on':'loop off'; });
+  /* ── LOOP ── */
+  btnLoop.addEventListener('click',()=>{loopActive=!loopActive;AudioEngine.loop(loopActive);Store.set('loop',loopActive);btnLoop.classList.toggle('active',loopActive);btnLoop.textContent=loopActive?'loop on':'loop off';});
 
-  /* global dnd */
-  document.addEventListener('dragover',e=>{ e.preventDefault(); });
+  /* ── GLOBAL DROP ── */
+  document.addEventListener('dragover',e=>{e.preventDefault();});
   document.addEventListener('drop',e=>{
     e.preventDefault();
-    if(mediaArea.contains(e.target)) return;
-    if(dropZone.contains(e.target)) return;
+    if(mediaScreen.contains(e.target))return;
+    if(dropZone.contains(e.target))return;
     const files=e.dataTransfer.files;
-    if(files.length>0) importFiles(files);
+    if(files.length>0)importAudio(files);
   });
 
-  /* Init viz canvas size */
+  /* Init */
   Visualizer.init();
 })();
 </script>
