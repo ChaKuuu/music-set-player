@@ -265,8 +265,8 @@
 
   <!-- ════ Track info ════ -->
   <div class="meta">
-    <div class="title" id="setName">拖放音频文件到下方</div>
-    <div class="sub" id="trackName">audio  ·  mp3 wav ogg flac</div>
+    <div class="title" id="setName">拖放文件到下方</div>
+    <div class="sub" id="trackName">mp3  wav  flac  ·  mp4  webm</div>
   </div>
 
   <!-- ════ Lyrics ════ -->
@@ -299,9 +299,9 @@
 
   <!-- ════ Audio drop zone ════ -->
   <div class="drop-zone" id="dropZone">
-    拖放音频文件<br><small>mp3  wav  ogg  flac  m4a</small>
+    拖放音频/视频文件<br><small>mp3  wav  ogg  flac  ·  mp4  webm</small>
   </div>
-  <input type="file" class="file-input-hidden" id="audioFileInput" accept="audio/*,.lrc" multiple>
+  <input type="file" class="file-input-hidden" id="audioFileInput" accept="audio/*,video/*,.lrc" multiple>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -329,26 +329,36 @@ const Store = (() => {
 const Playlist = (() => {
   let files=[],idx=-1; const lrcMap=new Map();
   const AUDIO_RX=/\.(mp3|wav|ogg|flac|m4a|aac|wma|opus|webm)$/i;
+  const VIDEO_RX=/\.(mp4|webm|mov|mkv|avi|m4v)$/i;
+  function isAudio(f){return f.type.startsWith('audio/')||AUDIO_RX.test(f.name);}
+  function isVideo(f){return f.type.startsWith('video/')||VIDEO_RX.test(f.name);}
   function add(nf){
     const arr=Array.from(nf);
     if(!arr.length)return{added:0,skipped:0,total:files.length};
     const lrcs=arr.filter(f=>/\.lrc$/i.test(f.name));
-    const audios=arr.filter(f=>f.type.startsWith('audio/')||AUDIO_RX.test(f.name));
+    const media=arr.filter(f=>isAudio(f)||isVideo(f));
     lrcs.forEach(f=>{const r=new FileReader();r.onload=()=>lrcMap.set(f.name.replace(/\.lrc$/i,''),r.result);r.readAsText(f);});
-    const skipped=arr.length-audios.length-lrcs.length;
-    files.push(...audios);if(idx===-1&&files.length>0)idx=0;
-    return{added:audios.length,skipped,total:files.length};
+    const skipped=arr.length-media.length-lrcs.length;
+    files.push(...media);if(idx===-1&&files.length>0)idx=0;
+    const vc=media.filter(f=>isVideo(f)).length;
+    return{added:media.length,skipped,total:files.length,videoCount:vc};
   }
   function cur(){return idx>=0?files[idx]:null;}
   function nxt(){if(!files.length)return null;idx=(idx+1)%files.length;return files[idx];}
   function gi(){return idx;}
   function cnt(){return files.length;}
+  function currentType(){
+    const f=cur();
+    if(!f)return'none';
+    if(isVideo(f))return'video';
+    return'audio';
+  }
   function lrcFor(f){
     if(!f)return null;
-    const base=f.name.replace(AUDIO_RX,'');
+    const base=f.name.replace(/\.(mp3|wav|ogg|flac|m4a|aac|wma|opus|webm|mp4|webm|mov|mkv|avi|m4v)$/i,'');
     return lrcMap.get(base)||lrcMap.get(f.name)||null;
   }
-  return{add,cur,nxt,gi,cnt,lrcFor};
+  return{add,cur,nxt,gi,cnt,currentType,lrcFor};
 })();
 
 /* ── AudioEngine ── */
@@ -634,8 +644,10 @@ const VisualScreen = (() => {
   }
   function updateMeta(){
     const f=Playlist.cur();
-    trackName.textContent=f?`${Playlist.gi()+1} / ${Playlist.cnt()}  ·  ${f.name}`:'尚无曲目';
-    setName.textContent=Playlist.cnt()>0?`${Playlist.cnt()} tracks`:'拖放音频文件到下方';
+    const type=Playlist.currentType();
+    const label=type==='video'?'Video':'Audio';
+    trackName.textContent=f?`${Playlist.gi()+1} / ${Playlist.cnt()}  ·  ${label}  ·  ${f.name}`:'尚无曲目';
+    setName.textContent=Playlist.cnt()>0?`${Playlist.cnt()} tracks`:'拖放音频/视频到下方';
   }
   function updatePlayBtn(){
     if(Playlist.cnt()===0){btnPlay.disabled=true;btnPlay.textContent='▶';return;}
@@ -668,8 +680,12 @@ const VisualScreen = (() => {
   function importAudio(fl){
     if(!fl||!fl.length)return;
     const r=Playlist.add(fl);
-    if(r.added===0){toast_('未识别到支持的音频格式');return;}
-    if(r.skipped>0)toast_(`已添加 ${r.added} 首，跳过 ${r.skipped} 个文件`);
+    if(r.added===0){toast_('未识别到支持的格式 (MP3/WAV/FLAC/MP4 等)');return;}
+    if(r.skipped>0){
+      let msg=`已添加 ${r.added} 首，跳过 ${r.skipped} 个文件`;
+      if(r.videoCount>0)msg+=` (含 ${r.videoCount} 个视频)`;
+      toast_(msg);
+    }
     if(r.added>0&&r.total===r.added)loadTrack();
     updateMeta();updatePlayBtn();
     dropZone.classList.toggle('hidden',Playlist.cnt()>0);
@@ -678,10 +694,13 @@ const VisualScreen = (() => {
     const f=Playlist.cur();if(!f)return;
     AudioEngine.load(f);updateMeta();updatePlayBtn();
 
+    // Only try lyrics for audio files (not videos)
     Lyrics.clear();lyricsBtn.style.display='none';lyricsPanel.classList.remove('open');lyricsVisible=false;
-    const lrc=Playlist.lrcFor(f);
-    if(lrc){Lyrics.parse(lrc);showLyrics();}
-    else if(typeof jsmediatags!=='undefined'){const found=await Lyrics.fromAudio(f);if(found)showLyrics();}
+    if(Playlist.currentType()!=='video'){
+      const lrc=Playlist.lrcFor(f);
+      if(lrc){Lyrics.parse(lrc);showLyrics();}
+      else if(typeof jsmediatags!=='undefined'){const found=await Lyrics.fromAudio(f);if(found)showLyrics();}
+    }
     renderLyrics();
   }
   function showLyrics(){if(!Lyrics.isEmpty())lyricsBtn.style.display='inline-block';}
