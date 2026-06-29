@@ -383,17 +383,32 @@ const Visualizer = (() => {
   const canvas=document.getElementById('vizCanvas');
   const ctx=canvas.getContext('2d');
   let ac=null,source=null,analyser=null,raf=0,running=false,dataArr=null;
+  let initFailed=false, sourceConnected=false;
 
-  function init(){
-    if(ac)return;
+  function ensureContext(){
+    if(initFailed)return false;
+    if(ac){
+      // Resume if suspended (browser policy)
+      if(ac.state==='suspended')ac.resume();
+      return true;
+    }
     try{
       ac=new(window.AudioContext||window.webkitAudioContext)();
+      if(ac.state==='suspended')ac.resume();
+    }catch(e){initFailed=true;return false;}
+    return true;
+  }
+
+  function connectSource(){
+    if(sourceConnected||initFailed)return;
+    try{
       source=ac.createMediaElementSource(AudioEngine.el);
       analyser=ac.createAnalyser();
       analyser.fftSize=256;analyser.smoothingTimeConstant=0.85;
       source.connect(analyser);analyser.connect(ac.destination);
       dataArr=new Uint8Array(analyser.frequencyBinCount);
-    }catch(e){console.warn('Web Audio API unavailable:',e);}
+      sourceConnected=true;
+    }catch(e){initFailed=true;}
   }
 
   function resize(){
@@ -405,7 +420,11 @@ const Visualizer = (() => {
   }
 
   function start(){
-    if(!ac)init();if(!ac||running)return;running=true;
+    if(running)return;
+    if(!ensureContext())return;
+    connectSource();
+    if(!analyser)return;
+    running=true;
     canvas.classList.add('active');resize();draw();
   }
   function stop(){
@@ -435,7 +454,7 @@ const Visualizer = (() => {
     }
   }
   window.addEventListener('resize',()=>{if(running)resize();});
-  return{start,stop,init};
+  return{start,stop};
 })();
 
 /* ── Lyrics ── */
@@ -661,8 +680,6 @@ const VisualScreen = (() => {
     if(files.length>0)importAudio(files);
   });
 
-  /* Init */
-  Visualizer.init();
 })();
 </script>
 </body>
