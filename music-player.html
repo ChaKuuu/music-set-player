@@ -34,7 +34,7 @@
   @keyframes enter{from{opacity:0;transform:translateY(8px)}}
 
   .media-screen{
-    width:100%;aspect-ratio:16/9;border-radius:10px;background:#e0e5ea;
+    width:100%;aspect-ratio:var(--ar,16/9);border-radius:10px;background:#e0e5ea;
     box-shadow:var(--shadow);overflow:hidden;position:relative;cursor:pointer;
     display:flex;align-items:center;justify-content:center;transition:box-shadow .3s var(--ease);
   }
@@ -73,6 +73,17 @@
   .btn-live{width:36px;height:36px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--ink-quiet);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s var(--ease)}
   .btn-live:hover{border-color:var(--accent);color:var(--accent)}
   .btn-live.active{background:var(--accent);border-color:var(--accent);color:#fff;animation:pulse 2s infinite}
+
+  .platform-toggle{
+    display:flex;align-items:center;gap:0;background:var(--border);border-radius:6px;overflow:hidden;font-size:10px;
+  }
+  .platform-toggle button{
+    background:transparent;border:none;padding:4px 10px;font-family:var(--font-ui);
+    font-size:10px;font-weight:400;color:var(--ink-quiet);cursor:pointer;letter-spacing:.04em;
+    transition:all .2s;
+  }
+  .platform-toggle button.active{background:var(--bg-card);color:var(--ink);font-weight:500;}
+  .platform-toggle button:hover:not(.active){color:var(--ink-dim);}
   @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(78,135,151,.4)}50%{box-shadow:0 0 0 8px rgba(78,135,151,0)}}
 
   .bottom-row{width:100%;display:flex;align-items:center;justify-content:center;gap:16px}
@@ -127,6 +138,21 @@
     pointer-events:none;
   }
   .live-waveform canvas{width:100%;height:80px;display:block}
+
+  /* Douyin portrait mode */
+  .live-overlay.douyin .live-screen{
+    max-width:min(56.25vh,100vw); /* 9:16 = 56.25% of height */
+    margin:0 auto;
+  }
+  .live-overlay.douyin .live-screen video,
+  .live-overlay.douyin .live-screen img{
+    object-fit:cover;
+  }
+  .live-overlay.douyin .live-waveform{height:100px}
+  .live-overlay.douyin .live-waveform canvas{height:100px}
+  .live-overlay.douyin .live-info{padding:32px 36px}
+  .live-overlay.douyin .live-track{font-size:18px;max-width:80%}
+  .live-overlay.douyin .live-channel{font-size:12px}
 
   /* Channel info in live mode — top overlay */
   .live-info{
@@ -222,6 +248,13 @@
   <div class="controls">
     <button class="btn-play" id="btnPlay" disabled>▶</button>
     <button class="btn-live" id="btnLive" title="直播模式">📡</button>
+  </div>
+
+  <div class="bottom-row">
+    <div class="platform-toggle" id="platformToggle">
+      <button data-platform="youtube" class="active">16:9</button>
+      <button data-platform="douyin">9:16</button>
+    </div>
   </div>
 
   <div class="bottom-row">
@@ -592,27 +625,43 @@ const VisualScreen = (()=>{
    LiveMode — fullscreen streaming
    ═══════════════════════════════════════════ */
 const LiveMode = (()=>{
-  let active=false;
+  let active=false,platform='youtube'; // 'youtube' | 'douyin'
   const channel=Store.get('channel')||'Late Night Radio';
   document.getElementById('liveChannel').textContent='🌙 '+channel;
+
+  function setPlatform(p){
+    platform=p;
+    document.documentElement.style.setProperty('--ar',p==='douyin'?'9/16':'16/9');
+    Store.set('platform',p);
+    updateLiveInfo();
+  }
 
   function enter(){
     if(active)return;
     active=true;
     document.body.classList.add('live');
     document.getElementById('btnLive').classList.add('active');
-    document.getElementById('liveOverlay').style.cursor='none';
+    const overlay=document.getElementById('liveOverlay');
+    overlay.style.cursor='none';
+
+    // Apply platform layout
+    if(platform==='douyin'){
+      overlay.classList.add('douyin');
+    }else{
+      overlay.classList.remove('douyin');
+    }
+
     updateLiveInfo();
-    // Hide cursor after 2s of inactivity
+    // Hide cursor after 2s
     let cursorTimer;
     function showCursor(){
-      document.getElementById('liveOverlay').style.cursor='default';
+      overlay.style.cursor='default';
       clearTimeout(cursorTimer);
-      cursorTimer=setTimeout(()=>{document.getElementById('liveOverlay').style.cursor='none';},2000);
+      cursorTimer=setTimeout(()=>{overlay.style.cursor='none';},2000);
     }
-    document.getElementById('liveOverlay').addEventListener('mousemove',showCursor,{once:true});
+    overlay.addEventListener('mousemove',showCursor,{once:true});
     document.addEventListener('mousemove',showCursor);
-    document.getElementById('liveOverlay')._showCursor=showCursor;
+    overlay._showCursor=showCursor;
   }
   function exit(){
     if(!active)return;
@@ -620,18 +669,23 @@ const LiveMode = (()=>{
     document.body.classList.remove('live');
     document.getElementById('btnLive').classList.remove('active');
     document.getElementById('liveOverlay').style.cursor='';
-    const showCursor=document.getElementById('liveOverlay')._showCursor;
-    if(showCursor)document.removeEventListener('mousemove',showCursor);
+    document.getElementById('liveOverlay').classList.remove('douyin');
+    const sc=document.getElementById('liveOverlay')._showCursor;
+    if(sc)document.removeEventListener('mousemove',sc);
   }
   function toggle(){active?exit():enter();}
   function isActive(){return active;}
+  function getPlatform(){return platform;}
 
   function updateLiveInfo(){
     const f=Playlist.cur();
     document.getElementById('liveTrack').textContent=f?f.name.replace(/\.[^.]+$/,''):'—';
   }
 
-  return{enter,exit,toggle,isActive,updateLiveInfo};
+  // Restore saved platform
+  setPlatform(Store.get('platform')||'youtube');
+
+  return{enter,exit,toggle,isActive,updateLiveInfo,setPlatform,getPlatform};
 })();
 
 /* ═══════════════════════════════════════════
@@ -773,8 +827,21 @@ const LiveMode = (()=>{
 
   /* Keyboard shortcuts */
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'){if(LiveMode.isActive())LiveMode.exit();}
-    if(e.key===' '&&e.target===document.body){e.preventDefault();btnPlay.click();}
+    if(e.key==='Escape'&&LiveMode.isActive()){LiveMode.exit();e.preventDefault();}
+    if(e.key===' '&&e.target===document.body&&!LiveMode.isActive()){e.preventDefault();btnPlay.click();}
+  });
+
+  /* Platform toggle */
+  document.querySelectorAll('#platformToggle button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#platformToggle button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      LiveMode.setPlatform(btn.dataset.platform);
+    });
+  });
+  const savedPlatform=Store.get('platform')||'youtube';
+  document.querySelectorAll('#platformToggle button').forEach(b=>{
+    b.classList.toggle('active',b.dataset.platform===savedPlatform);
   });
 
   /* Global drag */
